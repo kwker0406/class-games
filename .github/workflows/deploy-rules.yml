@@ -1,0 +1,25 @@
+name: Firebase 규칙 배포
+# 이 저장소가 Firebase 규칙의 유일한 주인. 규칙은 파일 전체가 통째로 바뀌므로
+# earth-escape(sessions·classes·codes)와 모든 게임(games) 구역이 이 파일 하나에 다 있어야 한다.
+on:
+  push:
+    branches: [main]
+    paths: [database.rules.json, firebase.json, .github/workflows/deploy-rules.yml]
+  workflow_dispatch: {}
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: 규칙 문법·구역 확인 + 배포
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SA" ]; then echo "FIREBASE_SERVICE_ACCOUNT 비밀 값이 없습니다"; exit 1; fi
+          node -e "const r=JSON.parse(require('fs').readFileSync('database.rules.json','utf8')).rules; for (const k of ['sessions','classes','codes','games']) if (!r[k]) { console.error(k+' 구역이 없습니다. 지우면 그 게임이 멈춥니다'); process.exit(1); }"
+          printf '%s' "$SA" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npx --yes firebase-tools@13 deploy --only database --project mini-game-f56d8 --non-interactive
+          rm -f "$RUNNER_TEMP/sa.json"

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__NAME__</title><link rel="stylesheet" href="../common/style.css"></head>
+<body><main>
+<h1 id="title">__NAME__</h1>
+
+<section id="join" class="card">
+  <p>선생님이 알려 준 방 코드와 닉네임을 넣으세요.</p>
+  <p><input id="code" placeholder="방 코드" maxlength="4" autocomplete="off"> <input id="nick" placeholder="닉네임(8자)" maxlength="8"></p>
+  <button id="go">입장하기</button>
+  <p id="msg" class="msg"></p>
+</section>
+
+<section id="wait" class="card hidden"><p><b id="me"></b>님, 선생님이 시작할 때까지 기다려 주세요.</p></section>
+
+<section id="play" class="card hidden">
+  <p id="q"></p><p id="choices"></p><p id="result"></p><p>점수: <b id="score">0</b></p>
+</section>
+
+<section id="end" class="card hidden"><p>게임이 끝났습니다. 내 점수: <b id="final">0</b></p></section>
+</main>
+<script type="module">
+import * as net from "../common/net.js";
+import { GAME, QUESTIONS } from "./game.js";
+const $ = id => document.getElementById(id);
+const show = id => { for (const s of ["join", "wait", "play", "end"]) $(s).classList.toggle("hidden", s !== id); };
+let me, score = 0, qi = 0;
+
+async function enter(code, nick) {
+  $("msg").textContent = ""; $("go").disabled = true;
+  try { me = await net.joinRoom(GAME, code, nick); }
+  catch (e) { $("msg").textContent = e.message === "NOCODE" ? "없는 방 코드입니다." : "입장 실패: " + e.message; $("go").disabled = false; return; }
+  try { sessionStorage.setItem("join", JSON.stringify({ code, nick })); } catch {}
+  $("me").textContent = nick;
+  net.onValue(net.R(`${me.base}/players/${me.uid}/score`), s => { score = s.val() || 0; $("score").textContent = $("final").textContent = score; });
+  net.onValue(net.R(`${me.base}/meta/state`), s => {
+    const st = s.val();
+    if (st === "play") { show("play"); ask(); } else if (st === "end") show("end"); else show("wait");
+  });
+}
+
+function ask() {
+  const it = QUESTIONS[qi % QUESTIONS.length];
+  $("q").textContent = it.q; $("result").textContent = ""; $("choices").replaceChildren(...it.choices.map((c, i) => {
+    const b = document.createElement("button"); b.textContent = c; b.className = "quiet";
+    b.onclick = async () => {
+      const ok = i === it.answer; $("result").textContent = ok ? "정답!" : "아쉬워요";
+      if (ok) await net.update(net.R(`${me.base}/players/${me.uid}`), { score: score + 1 });
+      qi++; setTimeout(ask, 800);
+    };
+    return b;
+  }));
+}
+
+$("go").onclick = () => { const c = $("code").value, n = $("nick").value.trim(); if (c && n) enter(c, n); };
+try { const j = JSON.parse(sessionStorage.getItem("join")); if (j) enter(j.code, j.nick); } catch {}
+</script>
+</body></html>

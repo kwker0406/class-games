@@ -1,0 +1,16 @@
+/* 모든 게임 공통 기본 모양. 게임마다 덧붙여 바꾸면 됨 */
+:root { --bg: #f6f3ec; --card: #fff; --ink: #222; --quiet: #666; --accent: #2b6cb0; --good: #2f855a; --bad: #c53030; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; background: var(--bg); color: var(--ink); }
+main { max-width: 720px; margin: 0 auto; padding: 16px; }
+.card { background: var(--card); border-radius: 12px; padding: 16px; margin: 12px 0; box-shadow: 0 1px 3px #0002; }
+input, button, select { font: inherit; padding: 10px 14px; border-radius: 8px; border: 1px solid #bbb; }
+button { background: var(--accent); color: #fff; border: 0; cursor: pointer; }
+button.quiet { background: #e2e2e2; color: var(--ink); }
+button:disabled { opacity: .5; }
+.hidden { display: none !important; }
+.big { font-size: 48px; font-weight: 700; letter-spacing: 6px; }
+.msg { color: var(--bad); min-height: 1.4em; }
+ul.players { list-style: none; padding: 0; }
+ul.players li { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; }
+ul.players li.off { color: var(--quiet); }
