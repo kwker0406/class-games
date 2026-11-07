@@ -12,9 +12,10 @@ document.getElementById("list").replaceChildren(...games.map(g => {
   const d = document.createElement("div"); d.className = "card";
   const h = document.createElement("h2"); h.textContent = g.name;
   const p = document.createElement("p"); p.textContent = g.subject;
-  const a = document.createElement("a"); a.href = g.url || `${g.id}/`; a.textContent = "학생 입장";
-  d.append(h, p, a);
-  if (!g.url) { const t = document.createElement("a"); t.href = `${g.id}/teacher.html`; t.textContent = "교사 관리"; d.append(" · ", t); }
+  const home = g.url || `${g.id}/`; // 다른 저장소 게임(url)도 교사 화면은 같은 폴더의 teacher.html
+  const a = document.createElement("a"); a.href = home; a.textContent = "학생 입장";
+  const t = document.createElement("a"); t.href = `${home}teacher.html`; t.textContent = "교사 관리";
+  d.append(h, p, a, " · ", t);
   return d;
 }));
 </script>
