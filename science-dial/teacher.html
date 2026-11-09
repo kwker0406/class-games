@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>과학 다이얼 · 교사</title><link rel="stylesheet" href="../common/style.css"></head>
+<body><main>
+<h1>과학 다이얼 · 교사 관리</h1>
+<section id="login" class="card"><button id="loginBtn">구글로 로그인</button><p id="msg" class="msg"></p></section>
+
+<section id="main" class="card hidden">
+  <p>주제 <select id="topic"></select> <button id="newRoom">새 방 만들기</button></p>
+  <p class="msg" style="color:var(--quiet)">조마다 기기 1대가 조 이름(예: 3조)으로 들어옵니다. 시작하면 각 조가 8라운드를 진행하고 점수가 여기에 올라옵니다.</p>
+  <div id="room" class="hidden">
+    <p>방 코드 <span id="code" class="big"></span> · <b id="topicName"></b> · 상태 <b id="state"></b> · <span id="count">0</span>개 조</p>
+    <p><button id="start">시작</button> <button id="stop" class="quiet">끝내기</button> <button id="reset" class="quiet">점수 0으로</button></p>
+    <ul id="players" class="players"></ul>
+  </div>
+</section>
+</main>
+<script type="module">
+import * as net from "../common/net.js";
+import { GAME, TOPICS } from "./game.js";
+const $ = id => document.getElementById(id);
+let base, players = {}, off = null;
+
+async function ready() { $("login").classList.add("hidden"); $("main").classList.remove("hidden"); }
+$("loginBtn").onclick = async () => {
+  try { await net.teacherLogin(); ready(); }
+  catch (e) { $("msg").textContent = e.message === "NOTTEACHER" ? "선생님 계정이 아닙니다." : "로그인 실패: " + e.message; }
+};
+net.teacherLogin(false).then(u => u && ready()); // 이미 로그인돼 있으면 바로
+
+$("topic").replaceChildren(...Object.entries(TOPICS).map(([k, t]) => Object.assign(document.createElement("option"), { value: k, textContent: `${t.name} (${t.lesson})` })));
+$("newRoom").onclick = async () => {
+  const topic = $("topic").value, code = await net.createRoom(GAME, { topic }); base = `games/${GAME}/rooms/${code}`;
+  $("topicName").textContent = TOPICS[topic].name;
+  $("code").textContent = code; $("room").classList.remove("hidden");
+  off?.();
+  off = net.onValue(net.R(base), s => {
+    const v = s.val() || {}; players = v.players || {};
+    $("state").textContent = { wait: "대기", play: "진행 중", end: "끝" }[v.meta?.state] || "-";
+    const rows = Object.values(players).sort((a, b) => (b.score || 0) - (a.score || 0));
+    $("count").textContent = rows.length;
+    $("players").replaceChildren(...rows.map(p => {   // 닉네임은 textContent로만(학생 입력이라 HTML로 넣지 않음)
+      const li = document.createElement("li"); li.className = p.online === false ? "off" : "";
+      const n = document.createElement("span"); n.textContent = p.nick;
+      const sc = document.createElement("b"); sc.textContent = p.score || 0;
+      li.append(n, sc); return li;
+    }));
+  });
+};
+$("start").onclick = () => net.set(net.R(`${base}/meta/state`), "play");
+$("stop").onclick = () => net.set(net.R(`${base}/meta/state`), "end");
+$("reset").onclick = () => net.update(net.R(`${base}/players`), Object.fromEntries(Object.keys(players).map(k => [`${k}/score`, 0])));
+</script>
+</body></html>

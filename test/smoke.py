@@ -34,6 +34,12 @@ with sync_playwright() as p:
             if g == "_template":   # 예시 1번 문제의 정답(100 °C) → 교사 화면 점수 1
                 s.click("#choices button >> nth=2")
                 t.wait_for_function("[...document.querySelectorAll('#players b')].some(b => b.textContent === '1')", timeout=10000)
+            if g == "science-dial":   # 출제 → 단서 고르기 → 가리기 → 바늘 확정 → 해설 → 다음 라운드
+                s.click("#peek"); s.click("#hand button >> nth=0"); s.click("#toTeam")
+                s.click("#plus"); s.click("#lock"); s.wait_for_selector("#reveal:not(.hidden)")
+                assert s.inner_text("#gain").startswith("+"), "점수 표시 없음"
+                s.click("#next"); s.wait_for_selector("#pass:not(.hidden)")
+                assert s.inner_text("#round") == "2", "라운드가 넘어가지 않음"
             t.click("#stop"); s.wait_for_selector("#end:not(.hidden)")
             for c2, _ in ss: c2.close()
             if errors: raise RuntimeError("페이지 오류: " + "; ".join(errors[:3]))
