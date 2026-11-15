@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>생태계 짓기 · 교사</title><link rel="stylesheet" href="../common/style.css">
+<style>
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  td, th { border-bottom: 1px solid #eee; padding: 6px; text-align: left; vertical-align: top; }
+  .codecell { font-size: 26px; font-weight: 800; letter-spacing: 3px; }
+  .small { color: var(--quiet); font-size: 13px; }
+</style></head>
+<body><main>
+<h1>생태계 짓기 · 교사 관리</h1>
+<section id="login" class="card"><button id="loginBtn">구글로 로그인</button><p id="msg" class="msg"></p></section>
+
+<section id="main" class="card hidden">
+  <p class="small">모둠(4명)마다 방을 하나씩 만드세요. 학생은 각자 휴대폰으로 방 코드를 넣고 들어옵니다. 2명 이상 들어온 방만 시작됩니다.</p>
+  <p><button id="newRoom">방 하나 만들기</button> <button id="start">모든 방 시작</button> <button id="stop" class="quiet">모든 방 끝내기</button></p>
+  <p>방금 만든 방: <span id="code" class="big"></span> · <span id="count">0</span>명</p>
+  <table><thead><tr><th>방 코드</th><th>상태</th><th>학생 · 점수</th></tr></thead><tbody id="rooms"></tbody></table>
+</section>
+</main>
+<script type="module">
+import * as net from "../common/net.js";
+import { GAME, newGame, norm, ranking, MAX_ROUNDS } from "./game.js";
+const $ = id => document.getElementById(id);
+const rooms = {};   // code → { v, row }
+let lastCode = "";
+
+async function ready() { $("login").classList.add("hidden"); $("main").classList.remove("hidden"); }
+$("loginBtn").onclick = async () => {
+  try { await net.teacherLogin(); ready(); }
+  catch (e) { $("msg").textContent = e.message === "NOTTEACHER" ? "선생님 계정이 아닙니다." : "로그인 실패: " + e.message; }
+};
+net.teacherLogin(false).then(u => u && ready());
+
+function draw(code) {
+  const { v, row } = rooms[code], players = v.players || {}, g = v.shared?.g ? norm(v.shared.g) : null;
+  const st = v.meta?.state === "play" ? (g?.over ? "끝" : `진행 ${g ? g.round : 0}/${MAX_ROUNDS}바퀴`) : { wait: "대기", end: "끝" }[v.meta?.state] || "-";
+  const who = g ? ranking(g).map(u => `${g.names[u]} ${g.p[u].pts}점`).join(" · ") : Object.values(players).map(p => p.nick).join(" · ");
+  const [c1, c2, c3] = row.children;
+  c1.textContent = code; c2.textContent = st; c3.textContent = who || "(아직 없음)";   // 닉네임은 textContent로만
+  if (code === lastCode) $("count").textContent = Object.keys(players).length;
+}
+
+$("newRoom").onclick = async () => {
+  const code = await net.createRoom(GAME); lastCode = code; $("code").textContent = code;
+  const row = document.createElement("tr");
+  row.append(Object.assign(document.createElement("td"), { className: "codecell" }), document.createElement("td"), document.createElement("td"));
+  $("rooms").append(row);
+  rooms[code] = { v: {}, row };
+  net.onValue(net.R(`games/${GAME}/rooms/${code}`), s => { rooms[code].v = s.val() || {}; draw(code); });
+};
+
+$("start").onclick = async () => {
+  for (const [code, { v }] of Object.entries(rooms)) {
+    const ps = Object.entries(v.players || {}).map(([uid, p]) => ({ uid, nick: p.nick })).slice(0, 4);
+    if (ps.length < 2 || v.meta?.state === "play") continue;
+    const base = `games/${GAME}/rooms/${code}`;
+    await net.set(net.R(`${base}/shared/g`), newGame(ps));   // 판을 먼저 깔고 시작
+    await net.set(net.R(`${base}/meta/state`), "play");
+  }
+};
+$("stop").onclick = () => Promise.all(Object.keys(rooms).map(code => net.set(net.R(`games/${GAME}/rooms/${code}/meta/state`), "end")));
+</script>
+</body></html>

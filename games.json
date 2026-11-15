@@ -9,5 +9,10 @@
     "id": "science-dial",
     "name": "과학 다이얼",
     "subject": "통합과학"
+  },
+  {
+    "id": "eco-builder",
+    "name": "생태계 짓기",
+    "subject": "통합과학"
   }
 ]

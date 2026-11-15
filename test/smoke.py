@@ -42,6 +42,20 @@ with sync_playwright() as p:
                 t.wait_for_function("[...document.querySelectorAll('#players b')].some(b => b.textContent.includes('1/8'))", timeout=10000)
                 s.click("#next"); s.wait_for_selector("#pass:not(.hidden)")
                 assert s.inner_text("#round") == "2", "라운드가 넘어가지 않음"
+            if g == "eco-builder":   # 차례인 학생이 토큰 3개 → 다른 학생 화면에 기록·차례 넘어감 → 다음 학생이 토큰 2개(같은 요소)
+                for k in range(2):
+                    pages = [x for _, x in ss]
+                    for x in pages: x.wait_for_selector("#play:not(.hidden)")
+                    turn = next(x for x in pages if "내 차례" in x.inner_text("#status"))
+                    if k == 0:
+                        for i in range(3): turn.click(f"#supply button >> nth={i}")
+                    else:
+                        turn.click("#supply button >> nth=4"); turn.click("#supply button >> nth=4")
+                    turn.click("#take")
+                    other = next(x for x in pages if x is not turn)
+                    other.wait_for_function("document.getElementById('log').textContent.includes('토큰을 가져옴')", timeout=10000)
+                    turn.wait_for_function("!document.getElementById('status').textContent.includes('내 차례')", timeout=10000)
+                t.wait_for_function("document.querySelector('#rooms td:nth-child(2)').textContent.startsWith('진행')", timeout=10000)
             t.click("#stop"); s.wait_for_selector("#end:not(.hidden)")
             for c2, _ in ss: c2.close()
             if errors: raise RuntimeError("페이지 오류: " + "; ".join(errors[:3]))
