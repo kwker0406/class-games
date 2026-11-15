@@ -42,11 +42,17 @@ with sync_playwright() as p:
                 t.wait_for_function("[...document.querySelectorAll('#players b')].some(b => b.textContent.includes('1/8'))", timeout=10000)
                 s.click("#next"); s.wait_for_selector("#pass:not(.hidden)")
                 assert s.inner_text("#round") == "2", "라운드가 넘어가지 않음"
+            def find_turn(pages):   # 차례가 화면에 넘어올 때까지 기다림(최대 10초)
+                for _ in range(50):
+                    turn = next((x for x in pages if "내 차례" in x.inner_text("#status")), None)
+                    if turn: return turn
+                    pages[0].wait_for_timeout(200)
+                raise AssertionError("아무에게도 차례가 오지 않음")
             if g == "eco-builder":   # 차례인 학생이 토큰 3개 → 다른 학생 화면에 기록·차례 넘어감 → 다음 학생이 토큰 2개(같은 요소)
                 for k in range(2):
                     pages = [x for _, x in ss]
                     for x in pages: x.wait_for_selector("#play:not(.hidden)")
-                    turn = next(x for x in pages if "내 차례" in x.inner_text("#status"))
+                    turn = find_turn(pages)
                     if k == 0:
                         for i in range(3): turn.click(f"#supply button >> nth={i}")
                     else:
@@ -56,10 +62,7 @@ with sync_playwright() as p:
                     other.wait_for_function("document.getElementById('log').textContent.includes('토큰을 가져옴')", timeout=10000)
                     turn.wait_for_function("!document.getElementById('status').textContent.includes('내 차례')", timeout=10000)
                 pages = [x for _, x in ss]   # 세 번째 학생: 판의 카드 찜하기(만능 토큰)
-                for _ in range(50):   # 차례가 화면에 넘어올 때까지 기다림
-                    turn = next((x for x in pages if "내 차례" in x.inner_text("#status")), None)
-                    if turn: break
-                    pages[0].wait_for_timeout(200)
+                turn = find_turn(pages)
                 turn.click("#board .cd >> nth=0"); turn.click("#detail button:has-text('찜하기')")
                 next(x for x in pages if x is not turn).wait_for_function("document.getElementById('log').textContent.includes('찜함')", timeout=10000)
                 turn.wait_for_selector("#resWrap:not(.hidden)")
@@ -69,7 +72,7 @@ with sync_playwright() as p:
             if errors: raise RuntimeError("페이지 오류: " + "; ".join(errors[:3]))
             print("통과:", g)
         except Exception as e:
-            fails.append(g); print("실패:", g, "→", str(e).splitlines()[0])
+            fails.append(g); print("실패:", g, "→", (str(e).splitlines() or [repr(e)])[0])
         ctx.close()
     b.close()
 fs.srv.shutdown()

@@ -26,6 +26,8 @@
   .cd { border: 2px solid var(--c); border-radius: 8px; background: #fff; color: var(--ink); padding: 4px 3px; text-align: center; font-size: 11px; position: relative; min-height: 96px; }
   .cd.no { opacity: .55; }
   .cd .em { font-size: 24px; display: block; }
+  .cd img.em { width: 100%; max-width: 64px; aspect-ratio: 1; margin: 0 auto; border-radius: 4px; }
+  .detail img.big { display: block; width: 100%; max-width: 260px; aspect-ratio: 1; margin: 0 auto 8px; border-radius: 8px; }
   .cd .nm { font-weight: 700; font-size: 12px; display: block; word-break: keep-all; }
   .cd .pt { position: absolute; top: 2px; left: 4px; font-weight: 800; color: var(--c); }
   .cd .bn { position: absolute; top: 2px; right: 3px; }
@@ -73,11 +75,13 @@
 </main>
 <script type="module">
 import * as net from "../common/net.js";
-import { GAME, CARDS, NOBLES, FACTOR, F, TK, TIER, WIN, MAX_ROUNDS, MAX_TOKENS, act, norm, current, canTake, canBuy, canReserve, hasFood, toPay, shortage, tokenCount, ranking } from "./game.js";
+import { GAME, ART, CARDS, NOBLES, FACTOR, F, TK, TIER, WIN, MAX_ROUNDS, MAX_TOKENS, act, norm, current, canTake, canBuy, canReserve, hasFood, toPay, shortage, tokenCount, ranking } from "./game.js";
 const $ = id => document.getElementById(id);
 const show = id => { for (const s of ["join", "wait", "play", "end"]) $(s).classList.toggle("hidden", s !== id); };
 const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const icon = f => FACTOR[f][1];
+// 카드 그림: 있으면 그림, 없으면 이모지
+const pic = (id, cls) => ART.has(id) ? Object.assign(mk("img", cls + " art"), { src: `img/${id}.webp`, alt: CARDS[id].n, loading: "lazy" }) : mk("span", cls, CARDS[id].e);
 let me, g = null, picks = [], sel = null, busy = false, pending = null, ret = [];   // pending: 반납을 기다리는 행동
 
 function chips(obj, keys = F, cls = "") {
@@ -88,7 +92,7 @@ function chips(obj, keys = F, cls = "") {
 function cardBtn(id, t) {
   const c = CARDS[id], my = g.p[me.uid], b = mk("button", "cd" + (canBuy(my, c) ? "" : " no"));
   b.style.setProperty("--c", `var(--t${t})`);
-  b.append(mk("span", "pt", c.pts ? `${c.pts}점` : ""), mk("span", "bn", icon(c.f)), mk("span", "em", c.e), mk("span", "nm", c.n),
+  b.append(mk("span", "pt", c.pts ? `${c.pts}점` : ""), mk("span", "bn", icon(c.f)), pic(id, "em"), mk("span", "nm", c.n),
            mk("div", "cost", F.filter(f => c.cost[f]).map(f => `${icon(f)}${c.cost[f]}`).join(" ")));
   b.onclick = () => { sel = id; detail(); }; return b;
 }
@@ -142,6 +146,7 @@ function detail() {
   if (onBoard && mine && !pending && canReserve(my)) { const r = mk("button", "quiet", `찜하기${g.supply.J ? " (+🧬)" : ""}`); r.onclick = () => go({ type: "reserve", id: sel }, g.supply.J > 0 ? 1 : 0); row.append(r); }
   const close = mk("button", "quiet", "닫기"); close.onclick = () => { sel = null; detail(); }; row.append(close);
   box.replaceChildren(
+    ...(ART.has(sel) ? [pic(sel, "big")] : []),
     mk("b", "", `${c.e} ${c.n} · ${TIER[c.tier]} · ${c.pts}점${onBoard ? "" : " · 찜한 카드"}`),
     mk("p", "", `적응한 비생물요소: ${icon(c.f)} ${FACTOR[c.f][0]} → 앞으로 ${FACTOR[c.f][0]} 비용 1 할인`),
     mk("p", "small", c.why),
