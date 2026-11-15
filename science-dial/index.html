@@ -2,24 +2,32 @@
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>과학 다이얼</title><link rel="stylesheet" href="../common/style.css">
 <style>
+  :root { --A: #d0402f; --B: #2563c9; }
   .dial { width: 100%; max-width: 520px; display: block; margin: 0 auto; touch-action: none; user-select: none; }
-  .ends { display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; max-width: 520px; margin: 0 auto; }
-  .clue { font-size: 24px; font-weight: 800; text-align: center; margin: 8px 0; word-break: keep-all; }
+  .ends { display: flex; justify-content: space-between; gap: 8px; font-weight: 700; font-size: 13px; max-width: 520px; margin: 0 auto; }
+  .ends span:last-child { text-align: right; }
+  .clue { font-size: 22px; font-weight: 800; text-align: center; margin: 8px 0; word-break: keep-all; }
   .hand { display: grid; gap: 8px; }
   .hand button { text-align: left; background: #eef3fa; color: var(--ink); border: 1px solid #c8d6ea; }
-  .row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+  .row { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
   .warn { background: #fff4d6; border-radius: 8px; padding: 10px; font-weight: 700; text-align: center; }
-  .pts { font-size: 40px; font-weight: 800; text-align: center; color: var(--good); }
+  .pts { font-size: 22px; font-weight: 800; text-align: center; }
   .small { color: var(--quiet); font-size: 14px; }
-  .bar { display: flex; flex-wrap: wrap; gap: 2px 12px; justify-content: space-between; color: var(--quiet); font-size: 14px; }
-  .bar span { white-space: nowrap; }
+  .board { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .team { border-radius: 10px; padding: 8px; text-align: center; color: #fff; opacity: .55; }
+  .team.on { opacity: 1; box-shadow: 0 0 0 3px #0003 inset; }
+  .team b { display: block; font-size: 30px; line-height: 1.1; }
+  .team.A { background: var(--A); } .team.B { background: var(--B); }
+  .mid { text-align: center; color: var(--quiet); font-size: 13px; white-space: nowrap; }
+  .tA { color: var(--A); } .tB { color: var(--B); }
+  .lr button { min-width: 120px; font-size: 18px; }
 </style></head>
 <body><main>
 <h1 id="title">과학 다이얼</h1>
 
 <section id="join" class="card">
-  <p>선생님이 알려 준 방 코드와 <b>조 이름</b>(예: 3조)을 넣으세요. 조마다 기기 1대만 들어옵니다.</p>
-  <p><input id="code" placeholder="방 코드" maxlength="4" autocomplete="off"> <input id="nick" placeholder="조 이름(8자)" maxlength="8"></p>
+  <p>선생님이 알려 준 방 코드와 <b>모둠 이름</b>(예: 1모둠)을 넣으세요. 기기 1대에 빨강 팀과 파랑 팀이 함께합니다.</p>
+  <p><input id="code" placeholder="방 코드" maxlength="4" autocomplete="off"> <input id="nick" placeholder="모둠 이름(8자)" maxlength="8"></p>
   <button id="go">입장하기</button>
   <p id="msg" class="msg"></p>
 </section>
@@ -27,32 +35,43 @@
 <section id="wait" class="card hidden"><p><b id="me"></b>, 선생님이 시작할 때까지 기다려 주세요.</p></section>
 
 <section id="play" class="card hidden">
-  <div class="bar"><span id="topicName"></span><span>라운드 <b id="round">1</b> / <span id="rounds"></span> · 점수 <b id="score">0</b></span></div>
+  <p class="small" id="topicName"></p>
+  <div class="board">
+    <div class="team A" id="boxA">빨강 팀<b id="scA">0</b></div>
+    <div class="mid">라운드<br><b id="round">1</b> / <span id="rounds"></span></div>
+    <div class="team B" id="boxB">파랑 팀<b id="scB">0</b></div>
+  </div>
 
   <div id="pass">
-    <p class="warn">출제자 <b id="who"></b>만 화면을 보세요.<br>나머지는 고개를 돌려 주세요.</p>
-    <p class="row"><button id="peek">목표 보기</button></p>
+    <p class="warn"><span class="act"></span> 출제자 한 명만 화면을 보세요.<br>나머지는 모두 고개를 돌려 주세요.</p>
+    <p class="row"><button id="peek">과녁 보기</button></p>
   </div>
 
   <div id="pick" class="hidden">
-    <p class="small">빨간 띠 가운데가 목표입니다. 목표에 가장 가까운 단서 카드를 하나 고르세요. 실제 위치가 목표와 가까우면 출제자 보너스 +1.</p>
+    <p class="small">빨간 칸이 과녁(4점)입니다. 과녁에 가장 가까운 단서 카드를 하나 고르세요.</p>
     <div class="ends"><span class="L"></span><span class="R"></span></div>
     <svg id="dialPick" class="dial" viewBox="0 0 220 120"></svg>
     <div id="hand" class="hand"></div>
   </div>
 
   <div id="hide" class="hidden">
-    <p class="warn">목표를 가렸습니다.<br>이제 화면을 팀에게 넘기세요.</p>
-    <p class="row"><button id="toTeam">팀이 맞히기</button></p>
+    <p class="warn">과녁을 가렸습니다.<br>이제 모두 화면을 보세요.</p>
+    <p class="row"><button id="toTeam">맞히기 시작</button></p>
   </div>
 
   <div id="guess" class="hidden">
-    <p class="small" id="ask"></p>
+    <p class="small"><span class="act"></span>이 바늘을 정합니다. <span id="ask"></span></p>
     <p class="clue" id="clue"></p>
     <div class="ends"><span class="L"></span><span class="R"></span></div>
-    <svg id="dialGuess" class="dial" viewBox="0 0 220 120" aria-label="바늘을 끌어 위치를 정하세요"></svg>
-    <p class="row"><button class="quiet" id="minus" aria-label="바늘 왼쪽으로">◀</button><b id="reading"></b><button class="quiet" id="plus" aria-label="바늘 오른쪽으로">▶</button></p>
-    <p class="row"><button id="lock">이 위치로 확정</button></p>
+    <svg id="dialGuess" class="dial" viewBox="0 0 220 120" aria-label="칸을 눌러 바늘을 옮기세요"></svg>
+    <p class="row"><button class="quiet" id="minus" aria-label="바늘 왼쪽 칸으로">◀</button><b id="reading"></b><button class="quiet" id="plus" aria-label="바늘 오른쪽 칸으로">▶</button></p>
+    <p class="row"><button id="lock">이 칸으로 확정</button></p>
+  </div>
+
+  <div id="side" class="hidden">
+    <p class="warn"><span class="opp"></span> 차례!<br>과녁 가운데(4점 칸)는 바늘의 어느 쪽에 있을까요?<br>맞히면 상대 팀 점수 1점을 뺏어 옵니다.</p>
+    <svg id="dialSide" class="dial" viewBox="0 0 220 120"></svg>
+    <p class="row lr"><button id="sideL">◀ 왼쪽</button><button id="sideR">오른쪽 ▶</button></p>
   </div>
 
   <div id="reveal" class="hidden">
@@ -60,42 +79,58 @@
     <svg id="dialReveal" class="dial" viewBox="0 0 220 120"></svg>
     <p class="pts" id="gain"></p>
     <p id="why"></p>
-    <p class="small">빨간 띠: 목표 · 검은 바늘: 팀의 답 · 파란 점: 단서의 실제 위치</p>
+    <p class="small">빨간 칸: 과녁 · 검은 바늘: 맞힌 칸 · 파란 점: 단서의 실제 위치</p>
     <p class="row"><button id="next">다음 라운드</button></p>
   </div>
 </section>
 
-<section id="end" class="card hidden"><p>게임이 끝났습니다. 우리 조 점수: <b id="final">0</b></p></section>
+<section id="end" class="card hidden">
+  <p class="pts" id="winner"></p>
+  <p class="row">빨강 팀 <b id="finA">0</b> : <b id="finB">0</b> 파랑 팀</p>
+</section>
 </main>
 <script type="module">
 import * as net from "../common/net.js";
-import { GAME, TOPICS, ROUNDS, CLUE_BONUS, points, newTarget, deal } from "./game.js";
+import { GAME, TOPICS, ROUNDS, SLOTS, points, side, slotOf, newTarget, deal } from "./game.js";
 const $ = id => document.getElementById(id);
 const show = id => { for (const s of ["join", "wait", "play", "end"]) $(s).classList.toggle("hidden", s !== id); };
-const step = id => { for (const s of ["pass", "pick", "hide", "guess", "reveal"]) $(s).classList.toggle("hidden", s !== id); };
-let me, topic, score = 0, round = 1, target = 50, clue = null, needle = 50, started = false;
+const step = id => { for (const s of ["pass", "pick", "hide", "guess", "side", "reveal"]) $(s).classList.toggle("hidden", s !== id); };
+const TEAM = { A: "빨강 팀", B: "파랑 팀" };
+let me, topic, sc = { A: 0, B: 0 }, round = 1, target = 7, clue = null, needle = 7, started = false;
+const act = () => (round % 2 ? "A" : "B"), opp = () => (round % 2 ? "B" : "A");
 
-// ---------- 다이얼(반원). v=0 왼쪽 끝, v=100 오른쪽 끝 ----------
-const CX = 110, CY = 110, RAD = 100, NS = "http://www.w3.org/2000/svg";
-const pt = (v, r = RAD) => { const a = Math.PI * (1 - v / 100); return [CX + r * Math.cos(a), CY - r * Math.sin(a)]; };
-const el = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
-const wedge = (a, b, fill) => { a = Math.max(0, a); b = Math.min(100, b);
-  const [x1, y1] = pt(a), [x2, y2] = pt(b); return el("path", { d: `M${CX} ${CY}L${x1} ${y1}A${RAD} ${RAD} 0 0 1 ${x2} ${y2}Z`, fill }); };
+// ---------- 다이얼: 반원을 13칸으로. 칸 s의 가운데 각도 ----------
+const CX = 110, CY = 112, RAD = 104, NS = "http://www.w3.org/2000/svg";
+const ang = u => Math.PI * (1 - u / SLOTS);                    // u: 0(왼쪽 끝)~13(오른쪽 끝)
+const pt = (u, r) => [CX + r * Math.cos(ang(u)), CY - r * Math.sin(ang(u))];
+const el = (tag, attrs, text) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; return e; };
+const wedge = (s, fill) => { const [x1, y1] = pt(s - 1, RAD), [x2, y2] = pt(s, RAD);
+  return el("path", { d: `M${CX} ${CY}L${x1} ${y1}A${RAD} ${RAD} 0 0 1 ${x2} ${y2}Z`, fill, stroke: "#fff", "stroke-width": 0.8 }); };
+const BAND = ["#d0402f", "#ef8f63", "#f6c7a3"];   // 과녁, ±1칸, ±2칸
 function draw(svg, { zones = false, hand = null, dot = null } = {}) {
-  svg.replaceChildren(el("path", { d: `M${CX - RAD} ${CY}A${RAD} ${RAD} 0 0 1 ${CX + RAD} ${CY}Z`, fill: "#e9e4d8", stroke: "#b9b19f" }));
-  if (zones) [[13, "#f6c7a3"], [8, "#ef8f63"], [3, "#d0402f"]].forEach(([w, c]) => svg.append(wedge(target - w, target + w, c)));
-  for (let v = 0; v <= 100; v += 10) { const [x1, y1] = pt(v, RAD), [x2, y2] = pt(v, RAD - 6); svg.append(el("line", { x1, y1, x2, y2, stroke: "#8a816f" })); }
-  if (dot != null) { const [x, y] = pt(dot, RAD - 14); svg.append(el("circle", { cx: x, cy: y, r: 5, fill: "#2563c9", stroke: "#fff", "stroke-width": 1.5 })); }
-  if (hand != null) { const [x, y] = pt(hand, RAD - 4); svg.append(el("line", { x1: CX, y1: CY, x2: x, y2: y, stroke: "#222", "stroke-width": 3, "stroke-linecap": "round" })); }
+  svg.replaceChildren();
+  for (let s = 1; s <= SLOTS; s++) {
+    const d = Math.abs(s - target);
+    svg.append(wedge(s, zones && d <= 2 ? BAND[d] : s % 2 ? "#e9e4d8" : "#ded7c6"));
+    const [x, y] = pt(s - 0.5, RAD - 12);
+    svg.append(el("text", { x, y: y + 3.5, "text-anchor": "middle", "font-size": 10, "font-weight": 700, fill: zones && d === 0 ? "#fff" : "#5b5446" }, s));
+  }
+  if (dot != null) { const [x, y] = pt(dot - 0.5, RAD - 28); svg.append(el("circle", { cx: x, cy: y, r: 5, fill: "#2563c9", stroke: "#fff", "stroke-width": 1.5 })); }
+  if (hand != null) { const [x, y] = pt(hand - 0.5, RAD - 22); svg.append(el("line", { x1: CX, y1: CY, x2: x, y2: y, stroke: "#222", "stroke-width": 3.5, "stroke-linecap": "round" })); }
   svg.append(el("circle", { cx: CX, cy: CY, r: 6, fill: "#222" }));
 }
 
-// ---------- 진행 ----------
-function setEnds() { document.querySelectorAll(".L").forEach(e => e.textContent = topic.left); document.querySelectorAll(".R").forEach(e => e.textContent = topic.right); }
-function newRound() {
-  $("round").textContent = round; $("who").textContent = `${((round - 1) % 4) + 1}번`;
-  target = newTarget(); clue = null; needle = 50; step("pass");
+// ---------- 점수판 ----------
+function board() {
+  $("scA").textContent = $("finA").textContent = sc.A; $("scB").textContent = $("finB").textContent = sc.B;
+  $("boxA").classList.toggle("on", act() === "A"); $("boxB").classList.toggle("on", act() === "B");
+  document.querySelectorAll(".act").forEach(e => { e.textContent = TEAM[act()]; e.className = "act t" + act(); });
+  document.querySelectorAll(".opp").forEach(e => { e.textContent = TEAM[opp()]; e.className = "opp t" + opp(); });
 }
+const save = () => net.update(net.R(`${me.base}/players/${me.uid}`), { a: sc.A, b: sc.B, score: sc.A + sc.B, round });
+
+// ---------- 진행 ----------
+function newRound() { $("round").textContent = round; target = newTarget(); clue = null; needle = 7; board(); step("pass"); }
 $("peek").onclick = () => {
   draw($("dialPick"), { zones: true });
   $("hand").replaceChildren(...deal(topic.items).map(it => {
@@ -104,28 +139,36 @@ $("peek").onclick = () => {
   }));
   step("pick");
 };
-$("toTeam").onclick = () => { $("ask").textContent = topic.ask; $("clue").textContent = clue.n; setNeedle(50); step("guess"); };
-function setNeedle(v) { needle = Math.max(0, Math.min(100, v)); draw($("dialGuess"), { hand: needle }); $("reading").textContent = topic.scale(needle); }
+$("toTeam").onclick = () => { $("ask").textContent = topic.ask; $("clue").textContent = clue.n; setNeedle(7); step("guess"); };
+function setNeedle(s) { needle = Math.max(1, Math.min(SLOTS, s)); draw($("dialGuess"), { hand: needle }); $("reading").textContent = `${needle}번 칸`; }
 $("minus").onclick = () => setNeedle(needle - 1); $("plus").onclick = () => setNeedle(needle + 1);
 const svgG = $("dialGuess");
-function fromPointer(e) {
+function fromPointer(e) {   // 누른 곳의 각도 → 칸
   const r = svgG.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 220 - CX, y = CY - (e.clientY - r.top) / r.height * 120;
-  setNeedle(100 - Math.atan2(Math.max(y, 0), x) / Math.PI * 100);
+  setNeedle(Math.floor((1 - Math.atan2(Math.max(y, 0), x) / Math.PI) * SLOTS) + 1);
 }
 svgG.addEventListener("pointerdown", e => { svgG.setPointerCapture(e.pointerId); fromPointer(e); });
 svgG.addEventListener("pointermove", e => { if (e.buttons) fromPointer(e); });
 
-$("lock").onclick = async () => {
-  const p = points(needle - target), bonus = Math.abs(clue.v - target) <= CLUE_BONUS ? 1 : 0;
-  draw($("dialReveal"), { zones: true, hand: needle, dot: clue.v });
-  $("gain").textContent = `+${p + bonus}점`;
-  $("why").textContent = `‘${clue.n}’ → ${clue.why}. 목표는 ${topic.scale(target)}.` + (bonus ? " 단서 선택이 정확해 출제자 보너스 +1!" : "");
+$("lock").onclick = () => { draw($("dialSide"), { hand: needle }); step("side"); };
+$("sideL").onclick = () => finish("L"); $("sideR").onclick = () => finish("R");
+
+async function finish(call) {
+  const a = act(), o = opp(), p = points(needle, target), truth = side(needle, target);
+  sc[a] += p;
+  const steal = call === truth && sc[a] > 0;   // 맞히면 출제 팀 점수에서 1점을 가져옴(0점이면 뺏을 것이 없음)
+  if (steal) { sc[a]--; sc[o]++; }
+  draw($("dialReveal"), { zones: true, hand: needle, dot: slotOf(clue.v) });
+  $("gain").textContent = `${TEAM[a]} +${p}점` + (steal ? ` · ${TEAM[o]} 1점 뺏기 성공!` : truth ? ` · ${TEAM[o]} 뺏기 실패` : " · 과녁 한가운데라 뺏기 없음");
+  $("why").textContent = `‘${clue.n}’ → ${clue.why} (${slotOf(clue.v)}번 칸). 과녁은 ${target}번 칸.`;
   $("next").textContent = round >= ROUNDS ? "결과 보기" : "다음 라운드";
-  step("reveal");
-  score += p + bonus; $("score").textContent = score;
-  await net.update(net.R(`${me.base}/players/${me.uid}`), { score });
-};
-$("next").onclick = () => { if (round >= ROUNDS) { $("final").textContent = score; show("end"); } else { round++; newRound(); } };
+  board(); step("reveal"); await save();
+}
+$("next").onclick = () => { if (round >= ROUNDS) end(); else { round++; newRound(); } };
+function end() {
+  $("winner").textContent = sc.A === sc.B ? "무승부!" : `${sc.A > sc.B ? TEAM.A : TEAM.B} 승리!`;
+  board(); show("end");
+}
 
 // ---------- 입장 ----------
 async function enter(code, nick) {
@@ -134,13 +177,15 @@ async function enter(code, nick) {
   catch (e) { $("msg").textContent = e.message === "NOCODE" ? "없는 방 코드입니다." : "입장 실패: " + e.message; $("go").disabled = false; return; }
   try { sessionStorage.setItem("join", JSON.stringify({ code, nick })); } catch {}
   $("me").textContent = nick;   // 학생 입력은 textContent로만
-  net.onValue(net.R(`${me.base}/players/${me.uid}/score`), s => { score = s.val() || 0; $("score").textContent = $("final").textContent = score; });
+  const saved = (await net.get(net.R(`${me.base}/players/${me.uid}`))).val() || {};   // 새로고침해도 점수·라운드 이어서
+  sc = { A: saved.a || 0, B: saved.b || 0 };
   net.onValue(net.R(`${me.base}/meta`), s => {
     const m = s.val() || {};
     topic = TOPICS[m.topic] || TOPICS.ph;
-    $("topicName").textContent = `${topic.name} · ${topic.lesson}`; $("rounds").textContent = ROUNDS; setEnds();
-    if (m.state === "play") { show("play"); if (!started) { started = true; round = 1; newRound(); } }
-    else if (m.state === "end") { $("final").textContent = score; show("end"); }
+    $("topicName").textContent = `${topic.unit} · ${topic.name}`; $("rounds").textContent = ROUNDS;
+    document.querySelectorAll(".L").forEach(e => e.textContent = topic.left); document.querySelectorAll(".R").forEach(e => e.textContent = topic.right);
+    if (m.state === "play") { show("play"); if (!started) { started = true; round = saved.round ? saved.round + 1 : 1; if (round > ROUNDS) end(); else newRound(); } }
+    else if (m.state === "end") end();
     else { started = false; show("wait"); }
   });
 }
