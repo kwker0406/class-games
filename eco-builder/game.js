@@ -3,14 +3,16 @@
 // 화면·통신 없이 규칙만 담은 순수 함수 모음(학생 화면, 교사 화면, 시뮬레이션이 같이 씀).
 export const GAME = "eco-builder";   // Firebase 주소에 쓰는 영어 이름(바꾸면 기존 방 기록과 끊김)
 export const NAME = "생태계 짓기";     // 화면에 보이는 이름
-export const WIN = 8;                // 이 점수에 먼저 닿은 바퀴가 끝나면 게임 끝(sim.mjs: 평균 9.3차례, 96%가 10바퀴 전에 끝남)
-export const MAX_ROUNDS = 10;        // 아무도 못 닿아도 10바퀴에서 끝(한 차례 25초 × 4명 × 10 ≈ 17분)
-export const MAX_TOKENS = 10;
-export const SUPPLY = { 2: 6, 3: 8, 4: 10 };  // 인원별 요소마다 토큰 수(각자 받는 시작 토큰 포함)
-export const START = 1;                        // 시작할 때 요소마다 1개씩(20분 안에 끝나게)
+export const WIN = 15;               // 이 점수에 먼저 닿은 바퀴가 끝나면 게임 끝(원작과 같음)
+export const MAX_ROUNDS = 18;        // 안전장치: 18바퀴에서 끝(sim.mjs: 한 사람당 평균 14.5차례 ≈ 25초×4명×14.5 ≈ 24분)
+export const MAX_TOKENS = 10;        // 넘으면 차례 끝에 반납
+export const MAX_RESERVE = 3;        // 찜한 카드는 3장까지
+export const SUPPLY = { 2: 4, 3: 5, 4: 7 };   // 인원별 요소마다 토큰 수
+export const JOKERS = 5;             // 만능 토큰(변이) 수
 
 export const F = ["L", "W", "T", "S", "A"];
-export const FACTOR = { L: ["빛", "☀️"], W: ["물", "💧"], T: ["온도", "🌡️"], S: ["토양", "🟫"], A: ["공기", "💨"] };
+export const FACTOR = { L: ["빛", "☀️"], W: ["물", "💧"], T: ["온도", "🌡️"], S: ["토양", "🟫"], A: ["공기", "💨"], J: ["변이(만능)", "🧬"] };
+export const TK = [...F, "J"];   // 손에 드는 토큰 종류(만능 포함)
 export const TIER = { 1: "생산자·분해자", 2: "1차 소비자", 3: "2차 소비자", 4: "3차·최상위 소비자" };
 
 // [이름, 그림, 적응한 비생물요소, 적응 설명]
@@ -41,8 +43,10 @@ const C = {
       ["범고래", "🐋", "A", "폐로 호흡해 물 위로 올라와 숨을 쉼"]],
 };
 // 비용 무늬(자기 요소를 뺀 나머지 4요소에 차례로 배치)와 점수. 같은 줄 안에서 돌려 씀.
-const COST = { 1: [[1, 1, 0, 0, 0], [2, 1, 0, 0, 0], [1, 1, 1, 0, 1]], 2: [[2, 1, 1, 0, 1], [2, 2, 0, 0, 1], [2, 1, 1, 1, 2]],
-               3: [[2, 2, 1, 0, 2], [3, 2, 1, 0, 3]], 4: [[3, 2, 2, 0, 4]] };   // 마지막 수 = 점수
+const COST = { 1: [[1, 1, 1, 0, 0], [2, 1, 0, 0, 0], [1, 1, 1, 1, 0], [3, 0, 0, 0, 0], [2, 2, 0, 0, 1]],
+               2: [[2, 1, 1, 0, 2], [2, 2, 0, 0, 2], [2, 2, 1, 0, 3], [3, 1, 0, 0, 2], [3, 2, 0, 0, 3]],
+               3: [[3, 2, 2, 0, 4], [3, 2, 1, 0, 3], [4, 2, 0, 0, 4], [2, 2, 2, 1, 4]],
+               4: [[4, 3, 2, 0, 5], [4, 3, 1, 0, 5], [5, 2, 1, 0, 5]] };   // 마지막 수 = 점수. 값은 새로 정함(줄이 4개라 30분에 맞게 sim.mjs로 조정)
 export const CARDS = {};
 for (const t of [1, 2, 3, 4]) C[t].forEach(([n, e, f, why], i) => {
   const pat = COST[t][i % COST[t].length], o = F.filter(x => x !== f), others = o.map((_, k) => o[(k + i) % 4]);   // 카드마다 비용 요소를 돌려 고르게
@@ -63,7 +67,7 @@ export const NOBLES = {
 
 // ---------- 규칙 ----------
 const shuffle = (a, rnd) => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-const zero = () => Object.fromEntries(F.map(f => [f, 0]));
+const zero = (keys = F) => Object.fromEntries(keys.map(f => [f, 0]));
 export function newGame(players, rnd = Math.random) {   // players: [{uid, nick}]
   const n = players.length, decks = {}, board = {};
   for (const t of [1, 2, 3, 4]) {
@@ -73,9 +77,9 @@ export function newGame(players, rnd = Math.random) {   // players: [{uid, nick}
   return {
     order: shuffle(players.map(p => p.uid), rnd), names: Object.fromEntries(players.map(p => [p.uid, p.nick])),
     turn: 0, round: 1, endRound: 0, over: false, last: "게임 시작!",
-    supply: Object.fromEntries(F.map(f => [f, SUPPLY[Math.max(2, Math.min(4, n))] - START * n])),
+    supply: { ...Object.fromEntries(F.map(f => [f, SUPPLY[Math.max(2, Math.min(4, n))]])), J: JOKERS },
     decks, board, nobles: shuffle(Object.keys(NOBLES), rnd).slice(0, n + 1),
-    p: Object.fromEntries(players.map(p => [p.uid, { t: Object.fromEntries(F.map(f => [f, START])), b: zero(), cards: [], pts: 0, nob: [] }])),
+    p: Object.fromEntries(players.map(p => [p.uid, { t: zero(TK), b: zero(), cards: [], res: [], pts: 0, nob: [] }])),
   };
 }
 export const current = g => g.order[g.turn];
@@ -83,22 +87,33 @@ export const current = g => g.order[g.turn];
 export function norm(g) {
   for (const t of [1, 2, 3, 4]) { g.decks[t] = Object.values(g.decks?.[t] || {}); g.board[t] = [0, 1, 2, 3].map(i => g.board?.[t]?.[i] || ""); }
   g.nobles = Object.values(g.nobles || {});
-  for (const u of g.order) { const p = g.p[u]; p.cards = Object.values(p.cards || {}); p.nob = Object.values(p.nob || {}); }
+  for (const u of g.order) { const p = g.p[u]; p.cards = Object.values(p.cards || {}); p.nob = Object.values(p.nob || {}); p.res = Object.values(p.res || {}); }
   return g;
 }
-export const tokenCount = me => F.reduce((s, f) => s + me.t[f], 0);
+export const tokenCount = me => TK.reduce((s, f) => s + (me.t[f] || 0), 0);
 // 먹이 조건: 1줄은 언제나, 2~4줄은 바로 아래 줄 카드를 1장 이상 가지고 있어야 함
 export const hasFood = (me, tier) => tier === 1 || me.cards.some(id => CARDS[id].tier === tier - 1);
 export const toPay = (me, card) => Object.fromEntries(F.map(f => [f, Math.max(0, (card.cost[f] || 0) - me.b[f])]));
-export const canBuy = (me, card) => hasFood(me, card.tier) && F.every(f => me.t[f] >= toPay(me, card)[f]);
+// 모자란 만큼은 만능 토큰으로 냄
+export const shortage = (me, card) => F.reduce((s, f) => s + Math.max(0, toPay(me, card)[f] - me.t[f]), 0);
+export const canBuy = (me, card) => hasFood(me, card.tier) && shortage(me, card) <= me.t.J;
 
 // 가져오기: 서로 다른 요소 최대 3개(남은 요소가 적으면 그만큼), 또는 4개 이상 남은 요소 2개
+// (10개를 넘게 가져와도 되고, 넘은 만큼 차례 끝에 반납 — 원작 규칙)
 export function canTake(g, me, picks) {
-  if (!picks.length || tokenCount(me) + picks.length > MAX_TOKENS) return false;
+  if (!picks.length || picks.some(f => !F.includes(f))) return false;
   const uniq = new Set(picks);
   if (uniq.size === 1 && picks.length === 2) return g.supply[picks[0]] >= 4;
   const avail = F.filter(f => g.supply[f] > 0).length;
-  return uniq.size === picks.length && picks.length <= 3 && picks.every(f => g.supply[f] > 0) && (picks.length === 3 || picks.length === Math.min(avail, MAX_TOKENS - tokenCount(me)));
+  return uniq.size === picks.length && picks.length <= 3 && picks.every(f => g.supply[f] > 0) && (picks.length === 3 || picks.length === avail);
+}
+export const canReserve = me => me.res.length < MAX_RESERVE;
+// 반납: 10개를 넘은 만큼 정확히, 가진 토큰에서
+function giveBack(g, me, ret = []) {
+  const over = tokenCount(me) - MAX_TOKENS;
+  if (over <= 0) { if (ret.length) throw new Error("반납할 필요가 없습니다"); return; }
+  if (ret.length !== over) throw new Error(`토큰 ${over}개를 반납해야 합니다`);
+  for (const f of ret) { if (!(me.t[f] > 0)) throw new Error("없는 토큰은 반납할 수 없습니다"); me.t[f]--; g.supply[f]++; }
 }
 
 // 행동 하나를 적용해 새 상태를 돌려줌(잘못된 행동이면 Error)
@@ -108,22 +123,33 @@ export function act(g0, uid, move) {
   if (move.type === "take") {
     if (!canTake(g, me, move.picks)) throw new Error("가져올 수 없는 조합입니다");
     for (const f of move.picks) { g.supply[f]--; me.t[f]++; }
-    g.last = `${nick}: ${move.picks.map(f => FACTOR[f][0]).join("·")} 토큰을 가져옴`;
+    giveBack(g, me, move.ret);
+    g.last = `${nick}: ${move.picks.map(f => FACTOR[f][0]).join("·")} 토큰을 가져옴` + (move.ret?.length ? ` (${move.ret.length}개 반납)` : "");
+  } else if (move.type === "reserve") {   // 판의 카드(id) 또는 덱 맨 위(tier)를 찜하고 만능 토큰 1개
+    if (!canReserve(me)) throw new Error(`찜은 ${MAX_RESERVE}장까지입니다`);
+    let id = move.id;
+    if (id) { const row = g.board[CARDS[id]?.tier] || [], i = row.indexOf(id); if (i < 0) throw new Error("판에 없는 카드입니다"); row[i] = g.decks[CARDS[id].tier].shift() ?? ""; }
+    else { id = g.decks[move.tier]?.shift(); if (!id) throw new Error("그 줄의 덱이 비었습니다"); }
+    me.res.push(id);
+    if (g.supply.J > 0) { g.supply.J--; me.t.J++; }
+    giveBack(g, me, move.ret);
+    g.last = `${nick}: ${move.id ? CARDS[id].n : `${move.tier}줄 덱 카드`}을(를) 찜함`;
   } else if (move.type === "buy") {
-    const card = CARDS[move.id], row = g.board[card?.tier] || [], i = row.indexOf(move.id);
-    if (i < 0) throw new Error("판에 없는 카드입니다");
+    const card = CARDS[move.id], fromRes = me.res.includes(move.id), row = g.board[card?.tier] || [], i = row.indexOf(move.id);
+    if (!card || (i < 0 && !fromRes)) throw new Error("살 수 없는 카드입니다");
     if (!hasFood(me, card.tier)) throw new Error(`먹이가 없습니다: ${TIER[card.tier - 1]} 카드가 먼저 필요해요`);
     if (!canBuy(me, card)) throw new Error("토큰이 모자랍니다");
     const pay = toPay(me, card);
-    for (const f of F) { me.t[f] -= pay[f]; g.supply[f] += pay[f]; }
+    for (const f of F) { const use = Math.min(pay[f], me.t[f]), j = pay[f] - use; me.t[f] -= use; g.supply[f] += use; me.t.J -= j; g.supply.J += j; }
     me.b[card.f]++; me.pts += card.pts; me.cards.push(card.id);
-    row[i] = g.decks[card.tier].shift() ?? "";   // 빈자리는 덱에서 채움(덱이 비면 빈칸 "")
+    if (fromRes) me.res = me.res.filter(x => x !== move.id);
+    else row[i] = g.decks[card.tier].shift() ?? "";   // 빈자리는 덱에서 채움(덱이 비면 빈칸 "")
     g.last = `${nick}: ${card.n}${card.pts ? ` (+${card.pts}점)` : ""}을(를) 데려옴`;
-    const nb = g.nobles.find(k => F.every(f => me.b[f] >= (NOBLES[k].need[f] || 0)));   // 보호종은 한 차례에 하나
-    if (nb) { g.nobles = g.nobles.filter(k => k !== nb); me.nob.push(nb); me.pts += 3; g.last += ` · 보호종 ${NOBLES[nb].n}이(가) 찾아옴 (+3점)`; }
   } else if (move.type === "pass") {
     g.last = `${nick}: 쉬어 감`;
   } else throw new Error("알 수 없는 행동");
+  const nb = g.nobles.find(k => F.every(f => me.b[f] >= (NOBLES[k].need[f] || 0)));   // 차례 끝에 보호종은 하나만
+  if (nb) { g.nobles = g.nobles.filter(k => k !== nb); me.nob.push(nb); me.pts += 3; g.last += ` · 보호종 ${NOBLES[nb].n}이(가) 찾아옴 (+3점)`; }
   if (!g.endRound && me.pts >= WIN) g.endRound = g.round;   // 이 바퀴를 끝까지 돌고 끝냄(차례 수를 똑같이)
   g.turn = (g.turn + 1) % g.order.length;
   if (g.turn === 0) { if (g.endRound || g.round >= MAX_ROUNDS) g.over = true; else g.round++; }

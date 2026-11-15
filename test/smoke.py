@@ -55,6 +55,14 @@ with sync_playwright() as p:
                     other = next(x for x in pages if x is not turn)
                     other.wait_for_function("document.getElementById('log').textContent.includes('토큰을 가져옴')", timeout=10000)
                     turn.wait_for_function("!document.getElementById('status').textContent.includes('내 차례')", timeout=10000)
+                pages = [x for _, x in ss]   # 세 번째 학생: 판의 카드 찜하기(만능 토큰)
+                for _ in range(50):   # 차례가 화면에 넘어올 때까지 기다림
+                    turn = next((x for x in pages if "내 차례" in x.inner_text("#status")), None)
+                    if turn: break
+                    pages[0].wait_for_timeout(200)
+                turn.click("#board .cd >> nth=0"); turn.click("#detail button:has-text('찜하기')")
+                next(x for x in pages if x is not turn).wait_for_function("document.getElementById('log').textContent.includes('찜함')", timeout=10000)
+                turn.wait_for_selector("#resWrap:not(.hidden)")
                 t.wait_for_function("document.querySelector('#rooms td:nth-child(2)').textContent.startsWith('진행')", timeout=10000)
             t.click("#stop"); s.wait_for_selector("#end:not(.hidden)")
             for c2, _ in ss: c2.close()

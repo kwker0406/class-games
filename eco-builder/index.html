@@ -14,13 +14,14 @@
   .chips { display: flex; flex-wrap: wrap; gap: 3px; }
   .chip { font-size: 12px; background: #f1efe8; border-radius: 6px; padding: 1px 4px; white-space: nowrap; }
   .chip.bonus { background: #dfeedd; }
-  .supply { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
-  .supply button { padding: 6px 2px; background: #f1efe8; color: var(--ink); border: 2px solid transparent; font-size: 13px; }
+  .supply { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+  .supply button { padding: 6px 2px; background: #f1efe8; color: var(--ink); border: 2px solid transparent; font-size: 12px; }
   .supply button.sel { border-color: #2b6cb0; background: #e3eefb; }
   .supply button b { display: block; font-size: 18px; }
   .row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
   .tier { margin-top: 8px; }
-  .tier h3 { font-size: 13px; margin: 0 0 4px; color: var(--c); }
+  .tier h3 { font-size: 13px; margin: 0 0 4px; color: var(--c); display: flex; justify-content: space-between; align-items: center; }
+  .tier h3 button { font-size: 11px; padding: 3px 6px; }
   .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
   .cd { border: 2px solid var(--c); border-radius: 8px; background: #fff; color: var(--ink); padding: 4px 3px; text-align: center; font-size: 11px; position: relative; min-height: 96px; }
   .cd.no { opacity: .55; }
@@ -30,7 +31,8 @@
   .cd .bn { position: absolute; top: 2px; right: 3px; }
   .cd .cost { font-size: 10px; margin-top: 2px; }
   .cd.empty { border-style: dashed; opacity: .3; }
-  .detail { border: 2px solid var(--c, #999); border-radius: 10px; padding: 10px; margin-top: 8px; }
+  .detail, .ret { border: 2px solid var(--c, #999); border-radius: 10px; padding: 10px; margin-top: 8px; }
+  .ret { --c: #e0a800; background: #fffaea; }
   .nobles { display: flex; gap: 4px; flex-wrap: wrap; }
   .nb { border: 1px solid #b9a; border-radius: 8px; padding: 4px 6px; font-size: 11px; background: #faf6ff; }
   .log { font-size: 13px; color: var(--quiet); text-align: center; min-height: 1.4em; }
@@ -48,8 +50,8 @@
 </section>
 
 <section id="wait" class="card hidden"><p><b id="me"></b>님, 선생님이 시작할 때까지 기다려 주세요.</p>
-  <p class="small">규칙: 내 차례에 ① 서로 다른 비생물요소 토큰 3개, ② 4개 이상 남은 요소 2개, ③ 생물 카드 1장 데려오기 중 하나를 합니다.
-  생물은 적응한 비생물요소만큼 다음 카드 비용을 깎아 줍니다. 소비자는 바로 아래 줄 생물(먹이)이 있어야 데려올 수 있습니다. 먼저 8점에 닿으면 그 바퀴를 끝으로 게임이 끝납니다.</p></section>
+  <p class="small">내 차례에 하나만 합니다. ① 서로 다른 비생물요소 토큰 3개 ② 4개 이상 남은 요소 토큰 2개 ③ 카드 1장 찜하기(+🧬 만능 토큰 1개, 찜은 3장까지) ④ 판이나 찜한 카드에서 생물 1장 데려오기.
+  생물은 적응한 비생물요소 비용을 1씩 깎아 줍니다. 소비자는 바로 아래 줄 생물(먹이)이 있어야 데려올 수 있습니다. 토큰은 10개까지, 넘으면 반납합니다. 보호종 조건을 채우면 차례 끝에 찾아옵니다(+3점). 먼저 15점에 닿으면 그 바퀴를 끝으로 게임이 끝납니다.</p></section>
 
 <section id="play" class="card hidden">
   <p id="status" class="status"></p>
@@ -57,10 +59,12 @@
   <div id="players" class="players"></div>
   <p class="small" style="margin:4px 0">보호종(조건을 채우면 찾아와 +3점)</p>
   <div id="nobles" class="nobles"></div>
-  <p class="small" style="margin:8px 0 4px">비생물요소 토큰 (눌러서 고르기)</p>
+  <p class="small" style="margin:8px 0 4px">토큰 (눌러서 고르기 · 🧬 만능은 찜할 때만 받음)</p>
   <div id="supply" class="supply"></div>
   <div class="row"><span id="picked" class="small"></span></div>
   <div class="row"><button id="take" disabled>토큰 가져오기</button><button id="clear" class="quiet">다시 고르기</button></div>
+  <div id="ret" class="ret hidden"></div>
+  <div id="resWrap" class="tier hidden" style="--c:#555"><h3>내가 찜한 카드</h3><div id="res" class="cards"></div></div>
   <div id="board"></div>
   <div id="detail" class="detail hidden"></div>
 </section>
@@ -69,17 +73,24 @@
 </main>
 <script type="module">
 import * as net from "../common/net.js";
-import { GAME, CARDS, NOBLES, FACTOR, F, TIER, WIN, MAX_ROUNDS, act, norm, current, canTake, canBuy, hasFood, toPay, tokenCount, ranking } from "./game.js";
+import { GAME, CARDS, NOBLES, FACTOR, F, TK, TIER, WIN, MAX_ROUNDS, MAX_TOKENS, act, norm, current, canTake, canBuy, canReserve, hasFood, toPay, shortage, tokenCount, ranking } from "./game.js";
 const $ = id => document.getElementById(id);
 const show = id => { for (const s of ["join", "wait", "play", "end"]) $(s).classList.toggle("hidden", s !== id); };
 const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const icon = f => FACTOR[f][1];
-let me, g = null, picks = [], sel = null, busy = false;
+let me, g = null, picks = [], sel = null, busy = false, pending = null, ret = [];   // pending: 반납을 기다리는 행동
 
-function chips(obj, cls = "") {
+function chips(obj, keys = F, cls = "") {
   const d = mk("div", "chips");
-  for (const f of F) if (obj[f]) d.append(mk("span", "chip " + cls, `${icon(f)}${obj[f]}`));
+  for (const f of keys) if (obj[f]) d.append(mk("span", "chip " + cls, `${icon(f)}${obj[f]}`));
   return d;
+}
+function cardBtn(id, t) {
+  const c = CARDS[id], my = g.p[me.uid], b = mk("button", "cd" + (canBuy(my, c) ? "" : " no"));
+  b.style.setProperty("--c", `var(--t${t})`);
+  b.append(mk("span", "pt", c.pts ? `${c.pts}점` : ""), mk("span", "bn", icon(c.f)), mk("span", "em", c.e), mk("span", "nm", c.n),
+           mk("div", "cost", F.filter(f => c.cost[f]).map(f => `${icon(f)}${c.cost[f]}`).join(" ")));
+  b.onclick = () => { sel = id; detail(); }; return b;
 }
 
 function render() {
@@ -88,53 +99,74 @@ function render() {
   show("play");
   const mine = current(g) === me.uid, my = g.p[me.uid];
   $("status").className = "status" + (mine ? " mine" : "");
-  $("status").textContent = `${g.round}/${MAX_ROUNDS}바퀴 · 목표 ${WIN}점 · ` + (mine ? "내 차례!" : `${g.names[current(g)]}의 차례`) + (g.endRound ? " · 마지막 바퀴" : "");
+  $("status").textContent = `${g.round}바퀴 · 목표 ${WIN}점 · ` + (mine ? "내 차례!" : `${g.names[current(g)]}의 차례`) + (g.endRound ? " · 마지막 바퀴" : "");
   $("log").textContent = g.last;
   $("players").replaceChildren(...g.order.map(u => {   // 닉네임은 textContent로만
     const p = g.p[u], box = mk("div", "pl" + (u === current(g) ? " on" : ""));
-    box.append(mk("b", "", `${g.names[u]}${u === me.uid ? " (나)" : ""} · ${p.pts}점`), mk("div", "small", `토큰 ${tokenCount(p)}개 · 생물 ${p.cards.length}장`), chips(p.b, "bonus"));
+    box.append(mk("b", "", `${g.names[u]}${u === me.uid ? " (나)" : ""} · ${p.pts}점`),
+      mk("div", "small", `토큰 ${tokenCount(p)}개${p.t.J ? `(🧬${p.t.J})` : ""} · 생물 ${p.cards.length}장 · 찜 ${p.res.length}장`), chips(p.b, F, "bonus"));
     return box;
   }));
   $("nobles").replaceChildren(...g.nobles.map(k => { const nb = NOBLES[k], d = mk("div", "nb");
-    d.append(mk("b", "", `${nb.e} ${nb.n}`), chips(nb.need, "bonus")); d.title = nb.why; return d; }));
-  $("supply").replaceChildren(...F.map(f => {
+    d.append(mk("b", "", `${nb.e} ${nb.n}`), chips(nb.need, F, "bonus")); d.title = nb.why; return d; }));
+  $("supply").replaceChildren(...TK.map(f => {
     const b = mk("button", picks.includes(f) ? "sel" : "");
-    b.append(mk("b", "", icon(f)), document.createTextNode(`${FACTOR[f][0]} ${g.supply[f]}`), mk("div", "small", `내 ${my.t[f]}`));
-    b.disabled = !mine; b.onclick = () => togglePick(f); return b;
+    b.append(mk("b", "", icon(f)), document.createTextNode(`${f === "J" ? "만능" : FACTOR[f][0]} ${g.supply[f]}`), mk("div", "small", `내 ${my.t[f]}`));
+    b.disabled = !mine || f === "J" || !!pending; b.onclick = () => togglePick(f); return b;
   }));
-  $("picked").textContent = picks.length ? "고른 토큰: " + picks.map(f => FACTOR[f][0]).join(" · ") : mine ? `내 토큰 ${tokenCount(my)}/10개` : "";
-  $("take").disabled = !mine || !canTake(g, my, picks);
+  $("picked").textContent = picks.length ? "고른 토큰: " + picks.map(f => FACTOR[f][0]).join(" · ") : mine ? `내 토큰 ${tokenCount(my)}/${MAX_TOKENS}개` : "";
+  $("take").disabled = !mine || !!pending || !canTake(g, my, picks);
+  $("resWrap").classList.toggle("hidden", !my.res.length);
+  $("res").replaceChildren(...my.res.map(id => cardBtn(id, CARDS[id].tier)));
   $("board").replaceChildren(...[1, 2, 3, 4].map(t => {
     const wrap = mk("div", "tier"); wrap.style.setProperty("--c", `var(--t${t})`);
-    wrap.append(mk("h3", "", `${t}줄 · ${TIER[t]}`));
+    const h = mk("h3", "", `${t}줄 · ${TIER[t]} (덱 ${g.decks[t].length}장)`);
+    if (mine && !pending && canReserve(my) && g.decks[t].length) {
+      const blind = mk("button", "quiet", "덱 맨 위 찜하기"); blind.onclick = () => go({ type: "reserve", tier: t }, g.supply.J > 0 ? 1 : 0); h.append(blind);
+    }
     const row = mk("div", "cards");
-    row.append(...g.board[t].map(id => {
-      if (!id) return mk("div", "cd empty", "빈칸");
-      const c = CARDS[id], b = mk("button", "cd" + (canBuy(my, c) ? "" : " no"));
-      b.style.setProperty("--c", `var(--t${t})`);
-      b.append(mk("span", "pt", c.pts ? `${c.pts}점` : ""), mk("span", "bn", icon(c.f)), mk("span", "em", c.e), mk("span", "nm", c.n));
-      const cost = mk("div", "cost", F.filter(f => c.cost[f]).map(f => `${icon(f)}${c.cost[f]}`).join(" ")); b.append(cost);
-      b.onclick = () => { sel = id; detail(); }; return b;
-    }));
-    wrap.append(row); return wrap;
+    row.append(...g.board[t].map(id => id ? cardBtn(id, t) : mk("div", "cd empty", "빈칸")));
+    wrap.append(h, row); return wrap;
   }));
-  detail();
+  detail(); retBox();
 }
 
 function detail() {
-  const box = $("detail"); if (!sel || !Object.values(g.board).flat().includes(sel)) { box.classList.add("hidden"); return; }
-  const c = CARDS[sel], my = g.p[me.uid], mine = current(g) === me.uid, pay = toPay(my, c);
+  const box = $("detail"), my = g.p[me.uid];
+  if (!sel || !(Object.values(g.board).flat().includes(sel) || my.res.includes(sel))) { box.classList.add("hidden"); return; }
+  const c = CARDS[sel], mine = current(g) === me.uid, pay = toPay(my, c), j = shortage(my, c), onBoard = !my.res.includes(sel);
   box.style.setProperty("--c", `var(--t${c.tier})`); box.classList.remove("hidden");
-  const why = !mine ? "내 차례가 아닙니다." : !hasFood(my, c.tier) ? `먹이가 없어요: ${TIER[c.tier - 1]} 카드가 먼저 필요합니다.` : !canBuy(my, c) ? "토큰이 모자랍니다." : "";
-  const btn = mk("button", "", "데려오기"); btn.disabled = !!why; btn.onclick = () => send({ type: "buy", id: sel });
-  const close = mk("button", "quiet", "닫기"); close.onclick = () => { sel = null; detail(); };
-  const row = mk("div", "row"); row.append(btn, close);
+  const why = !mine ? "내 차례가 아닙니다." : pending ? "먼저 토큰을 반납하세요." : !hasFood(my, c.tier) ? `먹이가 없어요: ${TIER[c.tier - 1]} 카드가 먼저 필요합니다.` : !canBuy(my, c) ? "토큰이 모자랍니다." : "";
+  const buy = mk("button", "", "데려오기"); buy.disabled = !!why; buy.onclick = () => go({ type: "buy", id: sel }, 0);
+  const row = mk("div", "row"); row.append(buy);
+  if (onBoard && mine && !pending && canReserve(my)) { const r = mk("button", "quiet", `찜하기${g.supply.J ? " (+🧬)" : ""}`); r.onclick = () => go({ type: "reserve", id: sel }, g.supply.J > 0 ? 1 : 0); row.append(r); }
+  const close = mk("button", "quiet", "닫기"); close.onclick = () => { sel = null; detail(); }; row.append(close);
   box.replaceChildren(
-    mk("b", "", `${c.e} ${c.n} · ${TIER[c.tier]} · ${c.pts}점`),
+    mk("b", "", `${c.e} ${c.n} · ${TIER[c.tier]} · ${c.pts}점${onBoard ? "" : " · 찜한 카드"}`),
     mk("p", "", `적응한 비생물요소: ${icon(c.f)} ${FACTOR[c.f][0]} → 앞으로 ${FACTOR[c.f][0]} 비용 1 할인`),
     mk("p", "small", c.why),
-    mk("p", "", `비용 ${F.filter(f => c.cost[f]).map(f => `${icon(f)}${c.cost[f]}`).join(" ")} → 내가 낼 토큰 ${F.filter(f => pay[f]).map(f => `${icon(f)}${pay[f]}`).join(" ") || "없음"}`),
-    mk("p", "msg", why), row);
+    mk("p", "", `비용 ${F.filter(f => c.cost[f]).map(f => `${icon(f)}${c.cost[f]}`).join(" ")} → 내가 낼 토큰 ${F.filter(f => pay[f]).map(f => `${icon(f)}${pay[f]}`).join(" ") || "없음"}${j ? (j <= my.t.J ? ` (모자란 ${j}개는 🧬로)` : ` (${j}개 모자람)`) : ""}`),
+    mk("p", "msg", mine ? why : ""), row);
+}
+
+// 행동을 보내기 전, 10개를 넘으면 반납할 토큰을 고르게 함(add = 이 행동으로 늘어나는 토큰 수)
+function go(move, add) {
+  const over = tokenCount(g.p[me.uid]) + add - MAX_TOKENS;
+  if (over > 0) { pending = { ...move, over }; ret = []; render(); return; }
+  send(move);
+}
+function retBox() {
+  const box = $("ret"); if (!pending) { box.classList.add("hidden"); return; }
+  box.classList.remove("hidden");
+  const my = g.p[me.uid], have = { ...my.t };
+  if (pending.type === "take") pending.picks.forEach(f => have[f]++); else if (g.supply.J > 0) have.J++;
+  ret.forEach(f => have[f]--);
+  const btns = mk("div", "row"); btns.append(...TK.filter(f => have[f] > 0).map(f => { const b = mk("button", "quiet", `${icon(f)} ${have[f]}`); b.disabled = ret.length >= pending.over; b.onclick = () => { ret.push(f); retBox(); }; return b; }));
+  const ok = mk("button", "", "반납하고 끝내기"); ok.disabled = ret.length !== pending.over;
+  ok.onclick = () => { const m = { ...pending, ret }; delete m.over; pending = null; send(m); };
+  const undo = mk("button", "quiet", "취소"); undo.onclick = () => { pending = null; ret = []; render(); };
+  const row = mk("div", "row"); row.append(ok, undo);
+  box.replaceChildren(mk("b", "", `토큰이 10개를 넘어요. ${pending.over}개를 반납하세요.`), mk("p", "small", ret.length ? "반납: " + ret.map(icon).join(" ") : "반납할 토큰을 누르세요."), btns, row);
 }
 
 function togglePick(f) {
@@ -145,11 +177,11 @@ function togglePick(f) {
   render();
 }
 $("clear").onclick = () => { picks = []; render(); };
-$("take").onclick = () => send({ type: "take", picks });
+$("take").onclick = () => go({ type: "take", picks: [...picks] }, picks.length);
 
 async function send(move) {
   if (busy) return; busy = true;
-  try { const next = act(g, me.uid, move); picks = []; sel = null; await net.set(net.R(`${me.base}/shared/g`), next); }
+  try { const next = act(g, me.uid, move); picks = []; sel = null; ret = []; await net.set(net.R(`${me.base}/shared/g`), next); }
   catch (e) { $("log").textContent = e.message; }
   busy = false;
 }
@@ -171,6 +203,7 @@ async function enter(code, nick) {
   net.onValue(net.R(`${me.base}/shared/g`), s => {
     const v = s.val(); g = v ? norm(v) : null;
     if (!g || !g.p[me.uid]) return show("wait");   // 시작 뒤에 들어온 사람은 다음 판까지 대기
+    if (current(g) !== me.uid) pending = null;
     if (state === "end") end(); else render();
   });
 }
