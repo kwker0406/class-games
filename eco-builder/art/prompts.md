@@ -187,7 +187,7 @@ one mosquito larva hanging just under the water surface by its small breathing t
 ## 올빼미 · 파일 `3-0.png`
 
 ```
-a tawny owl at night on a branch: large forward-facing eyes, facial disc, hooked beak, sharp talons. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view.
+a tawny owl at night on a branch: large forward-facing eyes, facial disc, hooked beak, sharp talons; each foot has exactly four toes gripping the branch, both feet identical. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view.
 ```
 
 ## 박쥐 · 파일 `3-1.png`
@@ -247,13 +247,13 @@ a diving beetle swimming underwater: smooth oval body, six legs with paddle-like
 ## 매 · 파일 `4-0.png`
 
 ```
-a peregrine falcon: dark 'mustache' stripe below the eye, hooked beak, pointed long wings spread wide, barred chest, yellow-ringed eye, talons open. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view. Dramatic, powerful low-angle pose that feels majestic.
+a peregrine falcon: dark 'mustache' stripe below the eye, hooked beak, pointed long wings spread wide, barred chest, yellow-ringed eye, talons open; each foot has exactly four toes (three forward, one hind toe backward), both feet identical. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view. Dramatic, powerful low-angle pose that feels majestic.
 ```
 
 ## 물수리 · 파일 `4-1.png`
 
 ```
-an osprey grabbing a fish from water: white underside, dark eye stripe, long angled wings, talons gripping the fish. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view. Dramatic, powerful low-angle pose that feels majestic.
+an osprey grabbing a fish from water: white underside, dark eye stripe, long angled wings, talons gripping the fish; each foot has exactly four toes, both feet identical. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view. Dramatic, powerful low-angle pose that feels majestic.
 ```
 
 ## 북극곰 · 파일 `4-2.png`
