@@ -5,6 +5,12 @@ STYLE = ("Black ink line art on a pure white background, square 1:1. Scientific 
          "clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, "
          "no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view.")
 POWER = " Dramatic, powerful low-angle pose that feels majestic."   # 4줄(최상위 포식자)
+# 곤충·벌레류: 징그럽지 않게 단순한 선으로(털·입·마디 묘사를 줄임). 다리 수 같은 핵심 특징만 지킴
+SOFT = {"꿀벌", "쇠똥구리", "흰개미", "장구벌레", "잠자리", "물방개", "장수하늘소", "지렁이", "달팽이", "곰팡이", "세균"}
+SOFT_STYLE = ("Simple, clean, friendly black line art on a pure white background, square 1:1. Smooth rounded outlines of even medium weight, "
+              "minimal interior detail, no hairs, no bristles, no close-up of mouthparts, no hatching, no shading, no color, no text, no border, no logo. "
+              "Seen from a comfortable distance, calm pose, approachable and not creepy, like a clean textbook pictogram, but still anatomically correct. "
+              "One subject only, centered, filling about 70% of the frame.")
 F = {  # 생물 → 꼭 보여야 할 특징(영어가 이미지 모델에 더 정확함)
  "해바라기": "a sunflower (Helianthus annuus): large flower head with a spiral seed pattern, ray petals, heart-shaped rough leaves, thick hairy stem",
  "소나무": "a Korean red pine tree (Pinus densiflora): needles in bundles of two, plated bark, small cones, crooked trunk",
@@ -16,12 +22,12 @@ F = {  # 생물 → 꼭 보여야 할 특징(영어가 이미지 모델에 더 �
  "보리": "barley plants: long awned ears of grain and narrow leaves",
  "자작나무": "a birch tree: white peeling bark with dark horizontal marks, small toothed leaves",
  "버섯": "a group of wild mushrooms growing on a fallen log: caps, gills, stems, mycelium threads in the wood",
- "곰팡이": "bread mold seen under a magnifier: thread-like hyphae and round spore heads on stalks",
- "세균": "soil bacteria under a microscope: rod-shaped and round cells, some with flagella, on soil particles",
+ "곰팡이": "mold growing on a slice of bread, simple: fine threads and small round spore heads on short stalks",
+ "세균": "a few soil bacteria in a microscope circle: simple rod-shaped and round cells, one with a thin tail, among soil grains",
  "식물성 플랑크톤": "phytoplankton under a microscope: diatoms with glass-like patterned shells and chain-forming cells",
  "맹그로브": "a mangrove tree on a muddy shore: arching prop roots and pencil-like breathing roots (pneumatophores) sticking up from the mud",
  "연꽃": "a lotus: large round leaf held above water, open flower, lotus root with air channels shown in cross-section",
- "꿀벌": "a honeybee: exactly six legs, two pairs of transparent veined wings, striped hairy abdomen, compound eyes, antennae, pollen basket on hind leg",
+ "꿀벌": "a honeybee on a flower: six legs, two pairs of wings, striped abdomen, two antennae",
  "닭": "a hen: comb and wattles, feathers, scaly legs, pecking grain",
  "양": "a sheep: thick woolly fleece, rectangular pupils, hooves",
  "낙타": "a dromedary camel: single hump, long legs, wide padded feet, long eyelashes",
@@ -30,12 +36,12 @@ F = {  # 생물 → 꼭 보여야 할 특징(영어가 이미지 모델에 더 �
  "다람쥐": "a Siberian chipmunk: five dark stripes on the back, bushy tail, cheek pouches full of acorns",
  "북극토끼": "an Arctic hare in winter: thick white fur, short dark-tipped ears, large furry hind feet in snow",
  "순록": "a reindeer: large branching antlers, thick fur, broad hooves in snow, eating lichen",
- "지렁이": "an earthworm in a soil cross-section: ringed segments, clitellum band, burrow tunnels",
- "쇠똥구리": "a dung beetle: exactly six legs, rolling a ball of dung backward with hind legs",
- "흰개미": "termites: workers with exactly six legs, soft pale bodies, inside wood tunnels",
+ "지렁이": "an earthworm in a soil cross-section: smooth body with a few ring lines and one wider band, burrow tunnels",
+ "쇠똥구리": "a dung beetle rolling a round ball with its hind legs: six legs, round shiny body",
+ "흰개미": "a single termite on a piece of wood: six legs, small pale rounded body, short straight antennae",
  "야크": "a yak on a high mountain: very long shaggy hair, curved horns, humped shoulders",
  "올챙이": "tadpoles in water: round body, long tail fin, small external gills visible on one",
- "장구벌레": "mosquito larvae hanging from the water surface by breathing tubes (siphons), segmented bodies, bristles",
+ "장구벌레": "one mosquito larva hanging just under the water surface by its small breathing tube, simple slim body, water line above",
  "올빼미": "a tawny owl at night on a branch: large forward-facing eyes, facial disc, hooked beak, sharp talons",
  "박쥐": "a bat flying in a dark cave: membrane wings stretched between long finger bones, large ears, catching a moth",
  "개구리": "a frog sitting on a wet leaf: bulging eyes, smooth moist skin with spots, eardrum (tympanum), webbed hind feet",
@@ -44,8 +50,8 @@ F = {  # 생물 → 꼭 보여야 할 특징(영어가 이미지 모델에 더 �
  "뱀": "a rat snake coiled: smooth scales, forked tongue, round pupils",
  "두더지": "a mole digging in a soil cross-section: large spade-like front paws with claws, tiny eyes, velvety fur, pointed snout",
  "오소리": "a badger at its burrow entrance: black-and-white striped face, stocky body, long digging claws",
- "잠자리": "a dragonfly: exactly six legs, two pairs of long veined wings held flat, huge compound eyes, long slender abdomen; its aquatic nymph below on a water plant",
- "물방개": "a diving beetle underwater: exactly six legs, flattened oval body, fringed swimming hind legs, an air bubble under the tip of the wings",
+ "잠자리": "a dragonfly resting on a reed: two pairs of long wings held flat, large round eyes, long slender body, six legs",
+ "물방개": "a diving beetle swimming underwater: smooth oval body, six legs with paddle-like hind legs, a small air bubble at the tail end",
  "매": "a peregrine falcon: dark 'mustache' stripe below the eye, hooked beak, pointed long wings spread wide, barred chest, yellow-ringed eye, talons open",
  "물수리": "an osprey grabbing a fish from water: white underside, dark eye stripe, long angled wings, talons gripping the fish",
  "북극곰": "a polar bear on sea ice: massive body, thick fur, long neck, small ears, huge paws",
@@ -56,7 +62,7 @@ F = {  # 생물 → 꼭 보여야 할 특징(영어가 이미지 모델에 더 �
  "반달가슴곰": "an Asiatic black bear: black fur with a white crescent (V) mark on the chest, round ears",
  "황새": "an Oriental stork in a wetland: white body, black flight feathers, long black bill, red legs",
  "저어새": "a black-faced spoonbill on a tidal flat: spoon-shaped black bill, black bare face, white plumage",
- "장수하늘소": "a Korean longhorn beetle (Callipogon relictus): exactly six legs, very long segmented antennae, large mandibles",
+ "장수하늘소": "a Korean longhorn beetle (Callipogon relictus) on an old tree trunk: six legs, very long antennae, large strong body",
  "원앙": "a male mandarin duck: orange 'sail' feathers on the back, white eye stripe, red bill, on a stream",
  "하늘다람쥐": "a Siberian flying squirrel gliding: fur membrane between front and hind legs, huge dark eyes, flat tail",
 }
@@ -69,6 +75,7 @@ out = ["# 생태계 짓기 카드 그림 프롬프트 (제미나이 이미지 �
        "- 저장할 파일 이름은 '파일' 칸 그대로입니다(예: 1-0.png). 정사각형 이미지로 저장해 주세요.",
        "- 다리 수·무늬 위치 등 특징이 틀리면 다시 생성해 주세요. 올려 주시면 제가 한 장씩 확인합니다.", ""]
 for fid, n, tier in rows:
-    out += [f"## {n} · 파일 `{fid}.png`", "", "```", f"{F[n]}. {STYLE}{POWER if tier == 4 else ''}", "```", ""]
+    style = SOFT_STYLE if n in SOFT else STYLE + (POWER if tier == 4 else "")
+    out += [f"## {n} · 파일 `{fid}.png`", "", "```", f"{F[n]}. {style}", "```", ""]
 open("prompts.md", "w", encoding="utf-8").write("\n".join(out))
 print(len(rows), "장")

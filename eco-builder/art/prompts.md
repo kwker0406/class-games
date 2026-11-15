@@ -67,13 +67,13 @@ a group of wild mushrooms growing on a fallen log: caps, gills, stems, mycelium 
 ## 곰팡이 · 파일 `1-10.png`
 
 ```
-bread mold seen under a magnifier: thread-like hyphae and round spore heads on stalks. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view.
+mold growing on a slice of bread, simple: fine threads and small round spore heads on short stalks. Simple, clean, friendly black line art on a pure white background, square 1:1. Smooth rounded outlines of even medium weight, minimal interior detail, no hairs, no bristles, no close-up of mouthparts, no hatching, no shading, no color, no text, no border, no logo. Seen from a comfortable distance, calm pose, approachable and not creepy, like a clean textbook pictogram, but still anatomically correct. One subject only, centered, filling about 70% of the frame.
 ```
 
 ## 세균 · 파일 `1-11.png`
 
 ```
-soil bacteria under a microscope: rod-shaped and round cells, some with flagella, on soil particles. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view.
+a few soil bacteria in a microscope circle: simple rod-shaped and round cells, one with a thin tail, among soil grains. Simple, clean, friendly black line art on a pure white background, square 1:1. Smooth rounded outlines of even medium weight, minimal interior detail, no hairs, no bristles, no close-up of mouthparts, no hatching, no shading, no color, no text, no border, no logo. Seen from a comfortable distance, calm pose, approachable and not creepy, like a clean textbook pictogram, but still anatomically correct. One subject only, centered, filling about 70% of the frame.
 ```
 
 ## 식물성 플랑크톤 · 파일 `1-12.png`
@@ -97,7 +97,7 @@ a lotus: large round leaf held above water, open flower, lotus root with air cha
 ## 꿀벌 · 파일 `2-0.png`
 
 ```
-a honeybee: exactly six legs, two pairs of transparent veined wings, striped hairy abdomen, compound eyes, antennae, pollen basket on hind leg. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view.
+a honeybee on a flower: six legs, two pairs of wings, striped abdomen, two antennae. Simple, clean, friendly black line art on a pure white background, square 1:1. Smooth rounded outlines of even medium weight, minimal interior detail, no hairs, no bristles, no close-up of mouthparts, no hatching, no shading, no color, no text, no border, no logo. Seen from a comfortable distance, calm pose, approachable and not creepy, like a clean textbook pictogram, but still anatomically correct. One subject only, centered, filling about 70% of the frame.
 ```
 
 ## 닭 · 파일 `2-1.png`
@@ -127,7 +127,7 @@ a kangaroo rat: large hind legs for hopping, very long tufted tail, big eyes, ho
 ## 달팽이 · 파일 `2-5.png`
 
 ```
-a land snail: spiral shell, eye stalks on upper tentacles, muscular foot leaving a trail. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view.
+a land snail: spiral shell, eye stalks on upper tentacles, muscular foot leaving a trail. Simple, clean, friendly black line art on a pure white background, square 1:1. Smooth rounded outlines of even medium weight, minimal interior detail, no hairs, no bristles, no close-up of mouthparts, no hatching, no shading, no color, no text, no border, no logo. Seen from a comfortable distance, calm pose, approachable and not creepy, like a clean textbook pictogram, but still anatomically correct. One subject only, centered, filling about 70% of the frame.
 ```
 
 ## 다람쥐 · 파일 `2-6.png`
@@ -151,19 +151,19 @@ a reindeer: large branching antlers, thick fur, broad hooves in snow, eating lic
 ## 지렁이 · 파일 `2-9.png`
 
 ```
-an earthworm in a soil cross-section: ringed segments, clitellum band, burrow tunnels. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view.
+an earthworm in a soil cross-section: smooth body with a few ring lines and one wider band, burrow tunnels. Simple, clean, friendly black line art on a pure white background, square 1:1. Smooth rounded outlines of even medium weight, minimal interior detail, no hairs, no bristles, no close-up of mouthparts, no hatching, no shading, no color, no text, no border, no logo. Seen from a comfortable distance, calm pose, approachable and not creepy, like a clean textbook pictogram, but still anatomically correct. One subject only, centered, filling about 70% of the frame.
 ```
 
 ## 쇠똥구리 · 파일 `2-10.png`
 
 ```
-a dung beetle: exactly six legs, rolling a ball of dung backward with hind legs. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view.
+a dung beetle rolling a round ball with its hind legs: six legs, round shiny body. Simple, clean, friendly black line art on a pure white background, square 1:1. Smooth rounded outlines of even medium weight, minimal interior detail, no hairs, no bristles, no close-up of mouthparts, no hatching, no shading, no color, no text, no border, no logo. Seen from a comfortable distance, calm pose, approachable and not creepy, like a clean textbook pictogram, but still anatomically correct. One subject only, centered, filling about 70% of the frame.
 ```
 
 ## 흰개미 · 파일 `2-11.png`
 
 ```
-termites: workers with exactly six legs, soft pale bodies, inside wood tunnels. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view.
+a single termite on a piece of wood: six legs, small pale rounded body, short straight antennae. Simple, clean, friendly black line art on a pure white background, square 1:1. Smooth rounded outlines of even medium weight, minimal interior detail, no hairs, no bristles, no close-up of mouthparts, no hatching, no shading, no color, no text, no border, no logo. Seen from a comfortable distance, calm pose, approachable and not creepy, like a clean textbook pictogram, but still anatomically correct. One subject only, centered, filling about 70% of the frame.
 ```
 
 ## 야크 · 파일 `2-12.png`
@@ -181,7 +181,7 @@ tadpoles in water: round body, long tail fin, small external gills visible on on
 ## 장구벌레 · 파일 `2-14.png`
 
 ```
-mosquito larvae hanging from the water surface by breathing tubes (siphons), segmented bodies, bristles. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view.
+one mosquito larva hanging just under the water surface by its small breathing tube, simple slim body, water line above. Simple, clean, friendly black line art on a pure white background, square 1:1. Smooth rounded outlines of even medium weight, minimal interior detail, no hairs, no bristles, no close-up of mouthparts, no hatching, no shading, no color, no text, no border, no logo. Seen from a comfortable distance, calm pose, approachable and not creepy, like a clean textbook pictogram, but still anatomically correct. One subject only, centered, filling about 70% of the frame.
 ```
 
 ## 올빼미 · 파일 `3-0.png`
@@ -235,13 +235,13 @@ a badger at its burrow entrance: black-and-white striped face, stocky body, long
 ## 잠자리 · 파일 `3-8.png`
 
 ```
-a dragonfly: exactly six legs, two pairs of long veined wings held flat, huge compound eyes, long slender abdomen; its aquatic nymph below on a water plant. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view.
+a dragonfly resting on a reed: two pairs of long wings held flat, large round eyes, long slender body, six legs. Simple, clean, friendly black line art on a pure white background, square 1:1. Smooth rounded outlines of even medium weight, minimal interior detail, no hairs, no bristles, no close-up of mouthparts, no hatching, no shading, no color, no text, no border, no logo. Seen from a comfortable distance, calm pose, approachable and not creepy, like a clean textbook pictogram, but still anatomically correct. One subject only, centered, filling about 70% of the frame.
 ```
 
 ## 물방개 · 파일 `3-9.png`
 
 ```
-a diving beetle underwater: exactly six legs, flattened oval body, fringed swimming hind legs, an air bubble under the tip of the wings. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view.
+a diving beetle swimming underwater: smooth oval body, six legs with paddle-like hind legs, a small air bubble at the tail end. Simple, clean, friendly black line art on a pure white background, square 1:1. Smooth rounded outlines of even medium weight, minimal interior detail, no hairs, no bristles, no close-up of mouthparts, no hatching, no shading, no color, no text, no border, no logo. Seen from a comfortable distance, calm pose, approachable and not creepy, like a clean textbook pictogram, but still anatomically correct. One subject only, centered, filling about 70% of the frame.
 ```
 
 ## 매 · 파일 `4-0.png`
@@ -307,7 +307,7 @@ a black-faced spoonbill on a tidal flat: spoon-shaped black bill, black bare fac
 ## 장수하늘소 · 파일 `N-beetle.png`
 
 ```
-a Korean longhorn beetle (Callipogon relictus): exactly six legs, very long segmented antennae, large mandibles. Black ink line art on a pure white background, square 1:1. Scientific field-guide style: realistic anatomy and proportions, clean confident outlines of even medium weight, fine hatching for texture and shading, no color, no gray fill, no text, no border, no logo. One subject only, centered, filling about 80% of the frame, slight three-quarter view.
+a Korean longhorn beetle (Callipogon relictus) on an old tree trunk: six legs, very long antennae, large strong body. Simple, clean, friendly black line art on a pure white background, square 1:1. Smooth rounded outlines of even medium weight, minimal interior detail, no hairs, no bristles, no close-up of mouthparts, no hatching, no shading, no color, no text, no border, no logo. Seen from a comfortable distance, calm pose, approachable and not creepy, like a clean textbook pictogram, but still anatomically correct. One subject only, centered, filling about 70% of the frame.
 ```
 
 ## 원앙 · 파일 `N-mandarin.png`
