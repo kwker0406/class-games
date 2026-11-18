@@ -121,6 +121,57 @@ export const TOPICS = {
      ["FM 라디오 전파", 0.5, "약 3 m"], ["AM 라디오 전파", 2.5, "약 300 m"]],
     (n, lg, why) => ({ n, v: lin(lg, -12, 3), why: `${why}` })),
 };
+
+// 놀이 주제: 학습 개념 없이 감정·형용사·취향. 정답이 없으니 라운드마다 양 끝 짝을 무작위로 뽑고, 공개 때 출제자가 이유를 말한다.
+const P = s => s.trim().split("\n").map(l => l.split("↔").map(x => x.trim()));
+const FEEL = P(`
+하나도 안 설렘 ↔ 엄청 설렘
+하나도 안 무서움 ↔ 너무 무서움
+짜증 하나도 없음 ↔ 짜증 폭발
+하나도 안 부러움 ↔ 너무 부러움
+하나도 안 민망함 ↔ 너무 민망함
+지루함 ↔ 신남
+슬픔 ↔ 기쁨
+차분함 ↔ 흥분됨
+하나도 안 그리움 ↔ 너무 그리움
+불안함 ↔ 마음 놓임
+하나도 안 뿌듯함 ↔ 너무 뿌듯함
+귀찮음 ↔ 의욕 넘침`);
+const ADJ = P(`
+하나도 안 귀여움 ↔ 너무 귀여움
+촌스러움 ↔ 세련됨
+평범함 ↔ 독특함
+조용함 ↔ 시끄러움
+부드러움 ↔ 거칢
+가벼움 ↔ 무거움
+차가운 느낌 ↔ 따뜻한 느낌
+단순함 ↔ 복잡함
+옛날 느낌 ↔ 요즘 느낌
+안전함 ↔ 위험함
+냄새 최악 ↔ 냄새 최고
+맛없어 보임 ↔ 맛있어 보임`);
+const TASTE = P(`
+아침밥으로 별로 ↔ 아침밥으로 딱
+쓸모없는 재능 ↔ 쓸모 있는 재능
+너무 과소평가됨 ↔ 너무 과대평가됨
+혼자 하기 좋음 ↔ 여럿이 하기 좋음
+초능력으로 꽝 ↔ 초능력으로 최고
+선물로 최악 ↔ 선물로 최고
+무인도에서 쓸모없음 ↔ 무인도에 꼭 필요
+악당 느낌 ↔ 주인공 느낌
+고양이 같음 ↔ 강아지 같음
+여름 느낌 ↔ 겨울 느낌
+평범함 ↔ 완전 이상함
+소풍 장소로 별로 ↔ 소풍 장소로 최고
+예술 작품 아님 ↔ 완전 예술 작품
+미술 시간에 필요 없음 ↔ 미술 시간 필수품
+시험 기간에 최악 ↔ 시험 기간에 최고`);
+const FUN = (name, pairs) => ({ unit: "놀이", name, ask: "이 단어는 어디쯤일까?", pairs, items: [] });
+Object.assign(TOPICS, {
+  feel: FUN("감정 다이얼", FEEL), adj: FUN("형용사 다이얼", ADJ), taste: FUN("취향·상상 다이얼", TASTE),
+  mix: FUN("놀이 다이얼 (모두 섞기)", [...FEEL, ...ADJ, ...TASTE]),
+});
+export const pickEnds = (t, rnd = Math.random) => t.pairs ? t.pairs[Math.floor(rnd() * t.pairs.length)] : [t.left, t.right];
 for (const t of Object.values(TOPICS)) t.scale = s => `${s}번 칸`;
 
 // 자체 점검(브라우저 콘솔에서 오류가 나면 바로 보임)
@@ -130,6 +181,6 @@ console.assert(slotOf(0) === 1 && slotOf(100) === SLOTS && slotOf(50) === 7, "�
 for (const ok of ["광합성", "삼엽충", "이산화탄소", "일산화탄소", "사자", "오존층", "구리", "열대우림", "열", "열점", "열도"]) console.assert(!checkClue(ok), "단서 통과해야 함: " + ok);
 for (const no of ["", "7", "７", "⑦", "Ⅶ", "칠", "칠번", "일곱", "열셋", "십삼", "Seven", "두번째", "광 합성", "가나다라마바사아자차카"]) console.assert(checkClue(no), "단서 막아야 함: " + no);
 for (const t of Object.values(TOPICS)) {
-  console.assert(t.items.length >= HAND, "단서 카드 부족: " + t.name);
+  console.assert(t.pairs ? t.pairs.every(p => p.length === 2 && p[0] && p[1]) : t.items.length >= HAND, "주제 데이터 오류: " + t.name);
   for (const it of t.items) console.assert(it.v >= 0 && it.v <= 100, "범위 밖 단서: " + it.n);
 }

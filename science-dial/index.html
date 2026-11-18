@@ -90,7 +90,7 @@
 </main>
 <script type="module">
 import * as net from "../common/net.js";
-import { GAME, TOPICS, ROUNDS, SLOTS, points, side, newTarget, checkClue } from "./game.js";
+import { GAME, TOPICS, ROUNDS, SLOTS, points, side, newTarget, checkClue, pickEnds } from "./game.js";
 const $ = id => document.getElementById(id);
 const show = id => { for (const s of ["join", "wait", "play", "end"]) $(s).classList.toggle("hidden", s !== id); };
 const step = id => { for (const s of ["pass", "pick", "hide", "guess", "side", "reveal"]) $(s).classList.toggle("hidden", s !== id); };
@@ -129,7 +129,8 @@ function board() {
 const save = () => net.update(net.R(`${me.base}/players/${me.uid}`), { a: sc.A, b: sc.B, score: sc.A + sc.B, round });
 
 // ---------- 진행 ----------
-function newRound() { $("round").textContent = round; target = newTarget(); clue = null; needle = 7; board(); step("pass"); }
+const setEnds = ([l, r]) => { document.querySelectorAll(".L").forEach(e => e.textContent = l); document.querySelectorAll(".R").forEach(e => e.textContent = r); };
+function newRound() { setEnds(pickEnds(topic)); $("round").textContent = round; target = newTarget(); clue = null; needle = 7; board(); step("pass"); }
 $("peek").onclick = () => {
   draw($("dialPick"), { zones: true });
   $("clueIn").value = ""; $("clueMsg").textContent = "";
@@ -185,7 +186,6 @@ async function enter(code, nick) {
     const m = s.val() || {};
     topic = TOPICS[m.topic] || TOPICS.ph;
     $("topicName").textContent = `${topic.unit} · ${topic.name}`; $("rounds").textContent = ROUNDS;
-    document.querySelectorAll(".L").forEach(e => e.textContent = topic.left); document.querySelectorAll(".R").forEach(e => e.textContent = topic.right);
     if (m.state === "play") { show("play"); if (!started) { started = true; round = saved.round ? saved.round + 1 : 1; if (round > ROUNDS) end(); else newRound(); } }
     else if (m.state === "end") end();
     else { started = false; show("wait"); }
