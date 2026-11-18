@@ -40,6 +40,13 @@
   .log { font-size: 13px; color: var(--quiet); text-align: center; min-height: 1.4em; }
   .rank li { font-size: 18px; padding: 4px 0; }
   .small { color: var(--quiet); font-size: 13px; }
+  .rules h2 { font-size: 16px; margin: 16px 0 6px; padding-bottom: 4px; border-bottom: 2px solid #eee; }
+  .rules p, .rules li { font-size: 15px; line-height: 1.6; margin: 4px 0; word-break: keep-all; }
+  .rules ul { padding-left: 20px; margin: 0; }
+  .acts { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; counter-reset: a; }
+  .acts li { counter-increment: a; display: grid; grid-template-columns: 28px 1fr; column-gap: 8px; background: #f6f4ee; border-radius: 8px; padding: 8px; margin: 0; }
+  .acts li::before { content: counter(a); grid-row: span 2; align-self: center; width: 26px; height: 26px; border-radius: 50%; background: #2f7d4f; color: #fff; font-weight: 800; display: grid; place-items: center; }
+  .acts span { color: var(--quiet); font-size: 14px; }
 </style></head>
 <body><main>
 <h1 id="title" style="font-size:22px">생태계 짓기</h1>
@@ -51,9 +58,39 @@
   <p id="msg" class="msg"></p>
 </section>
 
-<section id="wait" class="card hidden"><p><b id="me"></b>님, 선생님이 시작할 때까지 기다려 주세요.</p>
-  <p class="small">내 차례에 하나만 합니다. ① 서로 다른 비생물요소 토큰 3개 ② 4개 이상 남은 요소 토큰 2개 ③ 카드 1장 찜하기(+🧬 만능 토큰 1개, 찜은 3장까지) ④ 판이나 찜한 카드에서 생물 1장 데려오기.
-  생물은 적응한 비생물요소 비용을 1씩 깎아 줍니다. 소비자는 바로 아래 줄 생물(먹이)이 있어야 데려올 수 있습니다. 토큰은 10개까지, 넘으면 반납합니다. 보호종 조건을 채우면 차례 끝에 찾아옵니다(+3점). 먼저 15점에 닿으면 그 바퀴를 끝으로 게임이 끝납니다.</p></section>
+<section id="wait" class="card hidden"><p class="status"><b id="me"></b>님, 규칙을 읽으며 기다려 주세요.</p>
+<div class="rules">
+  <h2>🎯 목표</h2>
+  <p>생물 카드로 점수를 모읍니다. 누군가 <b>15점</b>에 닿으면 그 바퀴까지만 하고, <b>점수가 가장 높은 사람</b>이 이깁니다.<br><span class="small">동점이면 생물 카드가 더 적은 사람이 이깁니다.</span></p>
+
+  <h2>👆 내 차례에는 넷 중 <u>하나만</u></h2>
+  <ol class="acts">
+    <li><b>토큰 3개</b><span>서로 다른 비생물요소 3개 (☀️💧🌡️🟫💨)</span></li>
+    <li><b>같은 토큰 2개</b><span>그 토큰이 4개 이상 남아 있을 때만</span></li>
+    <li><b>카드 찜하기</b><span>카드 1장 찜 + 🧬 만능 토큰 1개(남아 있으면) · 찜은 3장까지</span></li>
+    <li><b>생물 데려오기</b><span>판이나 찜한 카드에서 1장, 비용만큼 토큰을 냄</span></li>
+  </ol>
+
+  <h2>🃏 카드 보는 법</h2>
+  <ul>
+    <li>왼쪽 위 숫자 = <b>점수</b></li>
+    <li>오른쪽 위 아이콘 = <b>할인</b>: 이 생물이 적응한 요소. 앞으로 그 토큰을 1개씩 덜 냅니다.</li>
+    <li>아래 아이콘 = <b>비용</b></li>
+  </ul>
+
+  <h2>🍽️ 먹이 규칙</h2>
+  <p>소비자는 <b>바로 아래 줄 생물(먹이)</b>을 이미 가지고 있어야 데려올 수 있습니다.<br>
+  <span class="small">생산자·분해자 → 1차 소비자 → 2차 소비자 → 3차·최상위 소비자</span></p>
+
+  <h2>🦦 보호종 (+3점)</h2>
+  <p>내 카드의 할인 아이콘 수가 조건을 채우면 차례 끝에 저절로 찾아옵니다.</p>
+
+  <h2>⚠️ 주의</h2>
+  <ul>
+    <li>토큰은 <b>10개까지</b>. 넘으면 골라서 반납합니다.</li>
+    <li>🧬 만능 토큰은 어떤 요소 대신에도 쓸 수 있습니다.</li>
+  </ul>
+</div></section>
 
 <section id="play" class="card hidden">
   <p id="status" class="status"></p>
