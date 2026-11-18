@@ -15,6 +15,22 @@ export const slotOf = v => Math.round(Math.max(0, Math.min(100, v)) / 100 * (SLO
 export const newTarget = (rnd = Math.random) => 2 + Math.floor(rnd() * (SLOTS - 2));   // 2~12칸(양 끝 띠가 너무 잘리지 않게)
 export const deal = (items, rnd = Math.random) => [...items].sort(() => rnd() - 0.5).slice(0, HAND);
 
+// 출제자가 적는 단서: 한 단어(띄어쓰기 없이 1~10자), 숫자 금지.
+// 숫자 문자(7, ７, ⑦, Ⅶ…)는 어디든 막고, 수 낱말(칠, 일곱, seven…)은 단어 전체가 수일 때만 막는다(삼엽충·이산화탄소는 통과).
+export const CLUE_MAX = 10;
+const KO = "영|공|일|이|삼|사|오|육|륙|칠|팔|구|십|백|천|만|하나|한|둘|두|셋|세|넷|네|다섯|여섯|일곱|여덟|아홉|열|스물|서른|마흔|쉰|예순|일흔|여든|아흔";
+const EN = "zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred";
+const NUMWORD = new RegExp(`^(?:(?:${KO})+|(?:${EN})+)(?:번째|번|칸|째|쯤)*$`, "i");
+export function checkClue(raw) {
+  const w = (raw || "").normalize("NFC").trim();
+  if (!w) return "단어를 적어 주세요.";
+  if (/\s/.test(w)) return "띄어쓰기 없이 한 단어만 적어 주세요.";
+  if ([...w].length > CLUE_MAX) return `${CLUE_MAX}자 이내로 적어 주세요.`;
+  if (/\p{N}/u.test(w)) return "숫자는 쓸 수 없어요.";
+  if (w !== "열" && NUMWORD.test(w)) return "숫자를 뜻하는 말은 쓸 수 없어요.";
+  return null;   // 통과
+}
+
 // 주제: 통합과학2 단원별. v = 0~100 위치(칸으로 바뀜). why = 공개 때 보여 줄 근거.
 const lin = (x, a, b) => (x - a) / (b - a) * 100;
 const T = (o, rows, f) => ({ ...o, items: rows.map(r => f(...r)) });
@@ -78,7 +94,7 @@ export const TOPICS = {
      ["물이 끓는 온도(1기압)", 100, "기화하며 에너지 흡수"]],
     (n, c, why) => ({ n, v: lin(c, -200, 100), why: `약 ${c} °C · ${why}` })),
 
-  trophic: T({ unit: "Ⅲ-1 생태계와 환경", name: "영양 단계 다이얼", left: "생산자 (1단계)", right: "최상위 포식자 (5단계)",
+  trophic: T({ unit: "Ⅲ-1 생태계와 환경", name: "영양 단계 다이얼", left: "생산자 (1번 칸)", right: "최상위 포식자 (13번 칸)",
     ask: "이 생물은 먹이 피라미드 어디쯤일까?" },
     [["벼", 1, "광합성을 하는 생산자"], ["식물성 플랑크톤", 1, "바다의 생산자"], ["메뚜기", 2, "풀을 먹는 1차 소비자"],
      ["토끼", 2, "풀을 먹는 1차 소비자"], ["동물성 플랑크톤", 2, "식물성 플랑크톤을 먹음"], ["개구리", 3, "곤충을 먹는 2차 소비자"],
@@ -111,6 +127,8 @@ for (const t of Object.values(TOPICS)) t.scale = s => `${s}번 칸`;
 console.assert(points(7, 7) === 4 && points(6, 7) === 3 && points(9, 7) === 2 && points(10, 7) === 0, "점수 띠");
 console.assert(side(7, 9) === "R" && side(7, 5) === "L" && side(7, 7) === null, "좌우 판정");
 console.assert(slotOf(0) === 1 && slotOf(100) === SLOTS && slotOf(50) === 7, "칸 변환");
+for (const ok of ["광합성", "삼엽충", "이산화탄소", "일산화탄소", "사자", "오존층", "구리", "열대우림", "열", "열점", "열도"]) console.assert(!checkClue(ok), "단서 통과해야 함: " + ok);
+for (const no of ["", "7", "７", "⑦", "Ⅶ", "칠", "칠번", "일곱", "열셋", "십삼", "Seven", "두번째", "광 합성", "가나다라마바사아자차카"]) console.assert(checkClue(no), "단서 막아야 함: " + no);
 for (const t of Object.values(TOPICS)) {
   console.assert(t.items.length >= HAND, "단서 카드 부족: " + t.name);
   for (const it of t.items) console.assert(it.v >= 0 && it.v <= 100, "범위 밖 단서: " + it.n);

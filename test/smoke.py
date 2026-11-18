@@ -35,7 +35,7 @@ with sync_playwright() as p:
                 s.click("#choices button >> nth=2")
                 t.wait_for_function("[...document.querySelectorAll('#players b')].some(b => b.textContent === '1')", timeout=10000)
             if g == "science-dial":   # 출제 → 단서 → 가리기 → 바늘 확정 → 상대 팀 좌우 → 해설·교사 점수판 → 다음 라운드
-                s.click("#peek"); s.click("#hand button >> nth=0"); s.click("#toTeam")
+                s.click("#peek"); s.fill("#clueIn", "7"); s.click("#clueOk"); assert "숫자" in s.text_content("#clueMsg"); s.fill("#clueIn", "광합성"); s.click("#clueOk"); s.click("#toTeam")
                 s.click("#plus"); s.click("#lock"); s.wait_for_selector("#side:not(.hidden)")
                 s.click("#sideL"); s.wait_for_selector("#reveal:not(.hidden)")
                 assert "빨강 팀 +" in s.inner_text("#gain"), "점수 표시 없음"

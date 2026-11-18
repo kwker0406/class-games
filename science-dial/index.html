@@ -7,8 +7,6 @@
   .ends { display: flex; justify-content: space-between; gap: 8px; font-weight: 700; font-size: 13px; max-width: 520px; margin: 0 auto; }
   .ends span:last-child { text-align: right; }
   .clue { font-size: 22px; font-weight: 800; text-align: center; margin: 8px 0; word-break: keep-all; }
-  .hand { display: grid; gap: 8px; }
-  .hand button { text-align: left; background: #eef3fa; color: var(--ink); border: 1px solid #c8d6ea; }
   .row { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
   .warn { background: #fff4d6; border-radius: 8px; padding: 10px; font-weight: 700; text-align: center; }
   .pts { font-size: 22px; font-weight: 800; text-align: center; }
@@ -48,10 +46,11 @@
   </div>
 
   <div id="pick" class="hidden">
-    <p class="small">빨간 칸이 과녁(4점)입니다. 과녁에 가장 가까운 단서 카드를 하나 고르세요.</p>
+    <p class="small">빨간 칸이 과녁(4점)입니다. 과녁 위치를 떠올리게 하는 <b>단어 하나</b>를 적으세요. 띄어쓰기·숫자는 쓸 수 없어요.</p>
     <div class="ends"><span class="L"></span><span class="R"></span></div>
     <svg id="dialPick" class="dial" viewBox="0 0 220 120"></svg>
-    <div id="hand" class="hand"></div>
+    <p class="row"><input id="clueIn" placeholder="단서 한 단어" maxlength="10" autocomplete="off"> <button id="clueOk">이 단어로 출제</button></p>
+    <p id="clueMsg" class="msg"></p>
   </div>
 
   <div id="hide" class="hidden">
@@ -79,7 +78,7 @@
     <svg id="dialReveal" class="dial" viewBox="0 0 220 120"></svg>
     <p class="pts" id="gain"></p>
     <p id="why"></p>
-    <p class="small">빨간 칸: 과녁 · 검은 바늘: 맞힌 칸 · 파란 점: 단서의 실제 위치</p>
+    <p class="small">빨간 칸: 과녁 · 검은 바늘: 맞힌 칸</p>
     <p class="row"><button id="next">다음 라운드</button></p>
   </div>
 </section>
@@ -91,7 +90,7 @@
 </main>
 <script type="module">
 import * as net from "../common/net.js";
-import { GAME, TOPICS, ROUNDS, SLOTS, points, side, slotOf, newTarget, deal } from "./game.js";
+import { GAME, TOPICS, ROUNDS, SLOTS, points, side, newTarget, checkClue } from "./game.js";
 const $ = id => document.getElementById(id);
 const show = id => { for (const s of ["join", "wait", "play", "end"]) $(s).classList.toggle("hidden", s !== id); };
 const step = id => { for (const s of ["pass", "pick", "hide", "guess", "side", "reveal"]) $(s).classList.toggle("hidden", s !== id); };
@@ -133,13 +132,16 @@ const save = () => net.update(net.R(`${me.base}/players/${me.uid}`), { a: sc.A, 
 function newRound() { $("round").textContent = round; target = newTarget(); clue = null; needle = 7; board(); step("pass"); }
 $("peek").onclick = () => {
   draw($("dialPick"), { zones: true });
-  $("hand").replaceChildren(...deal(topic.items).map(it => {
-    const b = document.createElement("button"); b.textContent = it.n;
-    b.onclick = () => { clue = it; step("hide"); }; return b;
-  }));
+  $("clueIn").value = ""; $("clueMsg").textContent = "";
   step("pick");
 };
-$("toTeam").onclick = () => { $("ask").textContent = topic.ask; $("clue").textContent = clue.n; setNeedle(7); step("guess"); };
+$("clueOk").onclick = () => {
+  const err = checkClue($("clueIn").value);
+  if (err) { $("clueMsg").textContent = err; return; }
+  clue = $("clueIn").value.normalize("NFC").trim(); step("hide");
+};
+$("clueIn").onkeydown = e => { if (e.key === "Enter") $("clueOk").click(); };
+$("toTeam").onclick = () => { $("ask").textContent = topic.ask; $("clue").textContent = clue; setNeedle(7); step("guess"); };
 function setNeedle(s) { needle = Math.max(1, Math.min(SLOTS, s)); draw($("dialGuess"), { hand: needle }); $("reading").textContent = `${needle}번 칸`; }
 $("minus").onclick = () => setNeedle(needle - 1); $("plus").onclick = () => setNeedle(needle + 1);
 const svgG = $("dialGuess");
@@ -158,9 +160,9 @@ async function finish(call) {
   sc[a] += p;
   const steal = call === truth && sc[a] > 0;   // 맞히면 출제 팀 점수에서 1점을 가져옴(0점이면 뺏을 것이 없음)
   if (steal) { sc[a]--; sc[o]++; }
-  draw($("dialReveal"), { zones: true, hand: needle, dot: slotOf(clue.v) });
+  draw($("dialReveal"), { zones: true, hand: needle });
   $("gain").textContent = `${TEAM[a]} +${p}점` + (steal ? ` · ${TEAM[o]} 1점 뺏기 성공!` : truth ? ` · ${TEAM[o]} 뺏기 실패` : " · 과녁 한가운데라 뺏기 없음");
-  $("why").textContent = `‘${clue.n}’ → ${clue.why} (${slotOf(clue.v)}번 칸). 과녁은 ${target}번 칸.`;
+  $("why").textContent = `단서 ‘${clue}’ · 과녁은 ${target}번 칸. 왜 이 단어가 이 칸인지 출제자가 설명해 보세요.`;
   $("next").textContent = round >= ROUNDS ? "결과 보기" : "다음 라운드";
   board(); step("reveal"); await save();
 }
