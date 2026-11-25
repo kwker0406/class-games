@@ -14,5 +14,11 @@
     "id": "eco-builder",
     "name": "생태계 짓기",
     "subject": "통합과학"
+  },
+  {
+    "id": "quadrat",
+    "name": "모의 방형구 조사",
+    "subject": "생명과학",
+    "url": "https://kwker0406.github.io/class-games/quadrat/"
   }
 ]

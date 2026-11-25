@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>모의 방형구 조사</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* 레이아웃: 고정 제어줄 → (방형구 확대 | 등고선 지도) → 기록표. 야외조사 노트 느낌, 방형구 끈의 주황빨강이 유일한 강조색 */
+:root{
+  --bg:#EBEFE8; --surface:#F7F9F4; --ink:#1B261E; --muted:#56655A; --line:#C6CFC2;
+  --accent:#C73A16; --accent-ink:#FFFFFF;
+  --sa:#3FAE6A; --sb:#E0A92E; --sc:#A06CD5;
+  --disp:'Gowun Batang','Noto Serif KR','AppleMyungjo',serif;
+  --body:'IBM Plex Sans KR','Apple SD Gothic Neo','Noto Sans KR',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#131A15;--surface:#1B241E;--ink:#E5ECE3;--muted:#9BA99E;--line:#2D3A31;--accent:#FF7B54;--accent-ink:#1E0E08;color-scheme:dark}
+}
+:root[data-theme="dark"]{--bg:#131A15;--surface:#1B241E;--ink:#E5ECE3;--muted:#9BA99E;--line:#2D3A31;--accent:#FF7B54;--accent-ink:#1E0E08;color-scheme:dark}
+
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--body);
+  padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+h1{font:700 clamp(26px,6vw,36px)/1.2 var(--disp);margin:0;text-wrap:balance}
+h2{font:600 14px/1.3 var(--body);letter-spacing:.02em;color:var(--muted);margin:0 0 8px}
+p{margin:0}
+.lede{color:var(--muted);max-width:62ch;margin-top:8px}
+.note{color:var(--muted);font-size:13px;margin-top:8px;max-width:62ch}
+
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding-block:10px;box-shadow:0 1px 0 var(--line)}
+button{font:500 15px var(--body);cursor:pointer;border-radius:10px}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.primary{flex:1 1 200px;min-height:52px;padding:12px 22px;border:0;background:var(--accent);color:var(--accent-ink);font-size:18px;font-weight:600}
+.primary:active{transform:translateY(1px)}
+.primary:disabled{background:var(--line);color:var(--muted);cursor:default;transform:none}
+.ghost{min-height:48px;padding:10px 16px;border:1px solid var(--line);background:transparent;color:var(--ink)}
+.count{margin-left:auto;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.main{display:grid;gap:22px;grid-template-columns:minmax(0,1fr)}
+@media (min-width:760px){.main{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.quad,.map{position:relative;width:100%;max-width:440px;aspect-ratio:1}
+canvas.view{display:block;width:100%;height:100%;border-radius:6px}
+.empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;
+  color:#F3EFE6;font-weight:500;text-shadow:0 1px 6px rgba(0,0,0,.6);pointer-events:none}
+.drop canvas{animation:drop .45s cubic-bezier(.2,.8,.3,1)}
+@keyframes drop{from{transform:translateY(-16px) scale(1.07) rotate(-2deg);opacity:.15}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.drop canvas{animation:none}}
+
+.res{max-width:440px;margin-top:6px}
+.row{display:grid;grid-template-columns:44px minmax(0,1fr) auto auto;align-items:center;gap:10px;padding-block:7px;border-bottom:1px solid var(--line)}
+.row canvas{width:44px;height:44px}
+.row .nm{font-weight:600}
+.row .v{font-size:15px;color:var(--muted)}
+.row .v b{font-size:24px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.row .c{color:var(--muted);min-width:6.8em;text-align:right}
+.row .c b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:7px 12px;text-align:right;white-space:nowrap}
+td:first-child,th:first-child{text-align:center}
+tbody tr:nth-child(even){background:color-mix(in srgb,var(--line) 28%,transparent)}
+thead th{background:var(--surface);font-weight:600;box-shadow:inset 0 -1px 0 var(--line)}
+.h1 th{height:34px;padding-block:0;text-align:center}
+.h2 th{font-weight:500;color:var(--muted);font-size:13px}
+th[data-s="a"]{box-shadow:inset 0 3px 0 var(--sa),inset 0 -1px 0 var(--line)}
+th[data-s="b"]{box-shadow:inset 0 3px 0 var(--sb),inset 0 -1px 0 var(--line)}
+th[data-s="c"]{box-shadow:inset 0 3px 0 var(--sc),inset 0 -1px 0 var(--line)}
+td.none{text-align:center;color:var(--muted);padding:22px}
+
+details{border-top:1px solid var(--line);padding-top:12px;color:var(--muted)}
+summary{cursor:pointer;width:max-content;padding:4px 0}
+.set{display:grid;gap:6px;margin-top:10px;max-width:420px;color:var(--ink)}
+.inl{display:flex;gap:8px}
+input{font:16px var(--body);padding:9px 12px;min-width:0;flex:1;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.set label{font-weight:500;margin-top:8px}
+
+#teacher{border-top:1px solid var(--line);padding-top:16px}
+#teacher th{box-shadow:inset 0 -1px 0 var(--line);text-align:right;font-size:13px}
+#teacher th:first-child,#teacher td:first-child{text-align:left}
+
+textarea,select{display:block;width:100%;font:16px var(--body);padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+textarea{resize:vertical}
+[hidden]{display:none!important}
+#send{display:grid;gap:8px;max-width:520px}
+a.primary{display:flex;align-items:center;justify-content:center;border-radius:10px;text-decoration:none;text-align:center}
+a.primary[aria-disabled]{background:var(--line);color:var(--muted);pointer-events:none}
+#gres{display:grid}
+#gres details{border-top:1px solid var(--line);padding:10px 0;color:var(--ink)}
+#gres summary{line-height:1.5}
+#gres td{white-space:normal}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>모의 방형구 조사</h1>
+    <p class="lede">가상 생태계(100 m × 100 m, 약 1 ha)에 1 m × 1 m 방형구를 10번 던져요. 방형구 안의 종 a, b, c를 기록하고 군집의 특성을 알아보세요.</p>
+  </header>
+
+  <div class="bar">
+    <button id="throw" class="primary" type="button">방형구 던지기</button>
+    <button id="clear" class="ghost" type="button">기록 지우기</button>
+    <span class="count" id="count" aria-live="polite">0 / 10회</span>
+  </div>
+
+  <div class="main">
+    <section>
+      <h2>방형구 안 (1 m²)</h2>
+      <div class="quad" id="quad">
+        <canvas class="view" id="cv" width="720" height="720" role="img" aria-label="아직 던지지 않은 방형구"></canvas>
+        <div class="empty" id="empty">방형구를 던져<br>생태계를 조사해 보세요</div>
+      </div>
+      <div class="res" id="res" aria-live="polite">
+        <div class="row"><canvas class="ico" width="88" height="88"></canvas><span class="nm">종 a</span><span class="v"><b id="n0">–</b> 개체</span><span class="c">피도 <b id="p0">–</b> m²</span></div>
+        <div class="row"><canvas class="ico" width="88" height="88"></canvas><span class="nm">종 b</span><span class="v"><b id="n1">–</b> 개체</span><span class="c">피도 <b id="p1">–</b> m²</span></div>
+        <div class="row"><canvas class="ico" width="88" height="88"></canvas><span class="nm">종 c</span><span class="v"><b id="n2">–</b> 개체</span><span class="c">피도 <b id="p2">–</b> m²</span></div>
+      </div>
+      <p class="note">방형구 안에 뿌리가 있는 개체만 셉니다. 피도는 그 종이 방형구 안에서 차지한 넓이(m²)예요. 방형구 한 개의 넓이는 1 m²이고, 잎이 겹쳐도 한 종의 넓이는 1.00 m²를 넘지 않아요. 그림은 개체가 겹치지 않게 자리를 조금 옮겨 그렸고, 빽빽하면 잎을 작게 그려요. 개체수와 피도 값은 그대로예요.</p>
+    </section>
+
+    <section>
+      <h2>방형구가 떨어진 곳</h2>
+      <div class="map"><canvas class="view" id="map" width="600" height="600" role="img" aria-label="등고선이 있는 생태계 지도와 방형구가 떨어진 위치"></canvas></div>
+      <p class="note" id="mapnote"></p>
+    </section>
+  </div>
+
+  <section>
+    <h2>기록표</h2>
+    <div class="tbl">
+      <table>
+        <thead>
+          <tr class="h1"><th rowspan="2">회차</th><th colspan="2" data-s="a">종 a</th><th colspan="2" data-s="b">종 b</th><th colspan="2" data-s="c">종 c</th></tr>
+          <tr class="h2"><th>개체수</th><th>피도(m²)</th><th>개체수</th><th>피도(m²)</th><th>개체수</th><th>피도(m²)</th></tr>
+        </thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="send" hidden>
+    <h2>결과 보내기</h2>
+    <p class="note">10번 조사를 마쳤어요. 아래 버튼을 누르면 구글 폼이 열려요. 내용은 이미 채워져 있어요. 고치지 말고 <b>제출</b>을 꼭 눌러 주세요. 계산은 학습지에 직접 해 보세요.</p>
+    <a id="send-go" class="primary" target="_blank" rel="noopener">결과 보내기</a>
+    <p class="note" id="sendmsg"></p>
+    <details>
+      <summary>버튼이 안 될 때</summary>
+      <p class="note">아래 글을 복사해서 폼의 답란에 붙여넣으세요.</p>
+      <textarea id="rep" rows="4" readonly aria-label="보낼 기록"></textarea>
+      <button id="copy" class="ghost" type="button" style="margin-top:8px">복사하기</button>
+      <p class="note" id="copymsg"></p>
+    </details>
+  </section>
+
+  <details>
+    <summary>설정</summary>
+    <div class="set">
+      <label for="seed">생태계 번호</label>
+      <div class="inl"><input id="seed" type="number" inputmode="numeric" min="1" max="999999"><button id="apply" class="ghost" type="button">적용</button></div>
+      <p class="note">같은 번호면 같은 생태계가 만들어져요. 방형구가 떨어지는 곳은 사람마다 달라요. 번호를 바꾸면 기록이 지워져요.</p>
+      <label for="code">교사용 코드</label>
+      <div class="inl"><input id="code" type="password" autocomplete="off"><button id="open" class="ghost" type="button">열기</button></div>
+      <p class="note" id="codemsg"></p>
+    </div>
+  </details>
+
+  <section id="teacher" hidden>
+    <h2>교사용 정답 (이 생태계 전체)</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>종</th><th>개체당 면적(m²)</th><th>전체 개체수</th><th>밀도(개체/m²)</th><th>빈도(%)</th><th>피도(점유 m²/조사 m²)</th><th>상대밀도</th><th>상대빈도</th><th>상대피도</th><th>중요치</th></tr></thead>
+      <tbody id="tt"></tbody>
+    </table></div>
+    <p class="note" id="tnote"></p>
+    <p class="note">기준: 1 m 격자 10,000칸. 빈도는 개체가 1개 이상 있는 칸의 비율, 피도는 칸마다 (개체수 × 개체당 면적, 최대 1 m²)의 평균이라 조사한 넓이 1 m²당 점유 넓이예요. 학생이 10개 방형구의 피도(m²)를 합해 10 m²로 나누면 이 값과 비교할 수 있어요. 학생이 던진 값은 표본이라 이 값과 조금 달라요. 교사용 정답을 열면 지도에 개체 분포가 바로 나타나요.</p>
+  </section>
+</div>
+
+<script>
+/*PURE*/
+const W=100, AREA=[.25,.03,.12];
+function rng(s){return function(){s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+// 지형: 큰 산 하나와 작은 언덕·골짜기 3개를 겹친 높이(0~1). 위쪽이 북쪽, 높이(m) = 100 + 40 × 값
+function terrain(seed){
+  const r=rng(seed*7+13),B=[{x:35+30*r(),y:35+30*r(),a:2,s:20+8*r()}];
+  for(let i=0;i<3;i++)B.push({x:r()*W,y:r()*W,a:(r()<.5?-1:1)*(.3+.4*r()),s:9+8*r()});
+  const f=(x,y)=>B.reduce((h,b)=>h+b.a*Math.exp(-((x-b.x)**2+(y-b.y)**2)/(2*b.s*b.s)),0);
+  let lo=1e9,hi=-1e9;
+  for(let y=0;y<=W;y+=4)for(let x=0;x<=W;x+=4){const v=f(x,y);if(v<lo)lo=v;if(v>hi)hi=v}
+  return (x,y)=>(f(x,y)-lo)/(hi-lo);
+}
+// 북쪽을 보는 비탈은 남쪽이 더 높다(y 아래쪽이 남쪽). 경사 기울기 0.008/m 이상이면 완전한 사면으로 본다.
+const clamp01=v=>Math.max(0,Math.min(1,v)), gy=(H,x,y)=>(H(x,y+1)-H(x,y-1))/2;
+const shade=(H,x,y)=>Math.max(clamp01(gy(H,x,y)/.008),clamp01((.3-H(x,y))/.3)); // 그늘: 북사면 또는 골짜기
+const sun=(H,x,y)=>clamp01(-gy(H,x,y)/.008); // 양지: 남사면
+// a: 임의 분포(1 m 칸마다 푸아송 1.5개체), b: 양지바른 남사면에 몰린 원형 군락 38개, c: 북사면·골짜기에서만 자라고 서로 간격을 둔다
+function build(seed){
+  const r=rng(seed),P=[[],[],[]],L=Math.exp(-1.5),H=terrain(seed);
+  for(let cy=0;cy<W;cy++)for(let cx=0;cx<W;cx++){let k=0,p=1;do{k++;p*=r()}while(p>L);for(let i=0;i<k-1;i++)P[0].push(cx+r(),cy+r())}
+  for(let j=0;j<38;j++){
+    let px,py;do{px=r()*W;py=r()*W}while(r()>.12+.88*sun(H,px,py));
+    const R=4+3*r(),n=Math.round(Math.PI*R*R*5.5*(.8+.4*r()));
+    for(let i=0;i<n;i++){
+      const a=r()*6.2832,d=R*Math.sqrt(r()),g=Math.sqrt(-2*Math.log(1-r()))*.6,h=r()*6.2832;
+      const x=px+d*Math.cos(a)+g*Math.cos(h),y=py+d*Math.sin(a)+g*Math.sin(h);
+      if(x>=0&&x<W&&y>=0&&y<W)P[1].push(x,y);
+    }
+  }
+  const m=90,s=W/m;
+  for(let iy=0;iy<m;iy++)for(let ix=0;ix<m;ix++){const x=(ix+r())*s,y=(iy+r())*s,q=r();if(q<.03+.97*shade(H,x,y))P[2].push(x,y)}
+  return P.map(a=>Float32Array.from(a));
+}
+function truthOf(P){
+  const T=P.map((p,s)=>{
+    const c=new Uint16Array(W*W);
+    for(let i=0;i<p.length;i+=2)c[Math.min(W-1,p[i+1]|0)*W+Math.min(W-1,p[i]|0)]++;
+    let f=0,cv=0;for(const n of c){if(n)f++;cv+=Math.min(1,n*AREA[s])}
+    return{N:p.length/2,d:p.length/2/(W*W),f:f/(W*W)*100,c:cv/(W*W)};
+  });
+  const sum=k=>T.reduce((a,t)=>a+t[k],0),sd=sum('d'),sf=sum('f'),sc=sum('c');
+  T.forEach(t=>{t.rd=t.d/sd*100;t.rf=t.f/sf*100;t.rc=t.c/sc*100;t.iv=t.rd+t.rf+t.rc});
+  return T;
+}
+const NM=['a','b','c'];
+function measureIn(Q,x,y){
+  const h=Q.map(p=>{const o=[];for(let i=0;i<p.length;i+=2){const dx=p[i]-x,dy=p[i+1]-y;if(dx>=0&&dx<1&&dy>=0&&dy<1)o.push(dx,dy)}return o});
+  const n=h.map(o=>o.length/2);
+  return{x,y,h,n,c:n.map((k,s)=>Math.min(1,Math.round(k*AREA[s]*100)/100))};
+}
+/*END*/
+
+const FORM={url:'',entry:''}; // 교사 구글 폼: viewform 주소(? 앞까지)와 entry 번호
+const $=id=>document.getElementById(id), KEY='bangyeongu-v2', CODE='quadrat', S=720, MAX=10;
+const COL=['#3FAE6A','#E0A92E','#A06CD5'];
+let seed=1027, P, H, ground, rec=[], armed=false;
+
+// 마칭 스퀘어로 등고선 선분을 그린다 (격자 2 m)
+const EDGE={1:['LB'],2:['BR'],3:['LR'],4:['TR'],5:['TL','BR'],6:['TB'],7:['TL'],8:['TL'],9:['TB'],10:['TR','LB'],11:['TR'],12:['LR'],13:['BR'],14:['LB']};
+function contours(g,k){
+  const n=50,c=W/n,v=[];
+  for(let j=0;j<=n;j++){v.push([]);for(let i=0;i<=n;i++)v[j].push(H(i*c,j*c))}
+  for(let li=1;li<=9;li++){
+    const Lv=li/10;g.beginPath();
+    for(let j=0;j<n;j++)for(let i=0;i<n;i++){
+      const a=v[j][i],b=v[j][i+1],cc=v[j+1][i+1],d=v[j+1][i],x=i*c,y=j*c;
+      const idx=(a>Lv?8:0)+(b>Lv?4:0)+(cc>Lv?2:0)+(d>Lv?1:0),sg=EDGE[idx];if(!sg)continue;
+      const pt=(x0,y0,x1,y1,v0,v1)=>{const t=(Lv-v0)/(v1-v0);return[(x0+(x1-x0)*t)*k,(y0+(y1-y0)*t)*k]};
+      const E={T:()=>pt(x,y,x+c,y,a,b),R:()=>pt(x+c,y,x+c,y+c,b,cc),B:()=>pt(x,y+c,x+c,y+c,d,cc),L:()=>pt(x,y,x,y+c,a,d)};
+      sg.forEach(s=>{const p=E[s[0]](),q=E[s[1]]();g.moveTo(p[0],p[1]);g.lineTo(q[0],q[1])});
+    }
+    // 개체 점 위에서도 보이도록 어두운 테두리 위에 밝은 선을 겹쳐 그린다
+    g.strokeStyle='rgba(0,0,0,.55)';g.lineWidth=li===5?4.2:3;g.stroke();
+    g.strokeStyle=li===5?'#F4FBEA':'rgba(244,251,234,.82)';g.lineWidth=li===5?2.2:1.3;g.stroke();
+  }
+}
+function makeGround(){
+  const oc=document.createElement('canvas');oc.width=oc.height=W;
+  const og=oc.getContext('2d'),im=og.createImageData(W,W);
+  for(let y=0;y<W;y++)for(let x=0;x<W;x++){const t=H(x+.5,y+.5),i=(y*W+x)*4;im.data[i]=36+t*42;im.data[i+1]=56+t*46;im.data[i+2]=52+t*14;im.data[i+3]=255}
+  og.putImageData(im,0,0);return oc;
+}
+let peak;
+function world(s){
+  seed=s;P=build(s);H=terrain(s);ground=makeGround();
+  peak=[0,0,-1];for(let y=0;y<W;y+=2)for(let x=0;x<W;x+=2){const t=H(x,y);if(t>peak[2])peak=[x,y,t]}
+}
+
+const measure=(x,y)=>measureIn(P,x,y);
+function save(){try{localStorage.setItem(KEY,JSON.stringify({seed,t:rec.map(q=>[q.x,q.y])}))}catch(e){}}
+world(1027);
+try{const d=JSON.parse(localStorage.getItem(KEY)||'null');if(d&&d.seed>0){world(d.seed);rec=(d.t||[]).slice(0,MAX).map(t=>measure(t[0],t[1]))}}catch(e){}
+
+function plant(g,s,x,y,R){
+  g.save();g.translate(x,y);
+  g.shadowColor='rgba(0,0,0,.4)';g.shadowBlur=R*.14;g.shadowOffsetY=R*.06;
+  g.lineJoin='round';g.lineWidth=Math.max(1,R*.035);g.strokeStyle='rgba(0,0,0,.38)';
+  const lg=(c0,c1,x0,y0,x1,y1)=>{const q=g.createLinearGradient(x0,y0,x1,y1);q.addColorStop(0,c0);q.addColorStop(1,c1);return q};
+  if(s===0){ // 잎이 겹겹이 퍼진 로제트
+    [[1,0,'#1F7A48','#6FD596'],[.62,Math.PI/8,'#2E9A5E','#A5EBBF']].forEach(([sc,off,c0,c1])=>{
+      for(let i=0;i<8;i++){
+        g.save();g.rotate(off+i*Math.PI/4);const l=R*sc;
+        g.beginPath();g.moveTo(0,0);g.bezierCurveTo(l*.25,-l*.34,l*.7,-l*.3,l,0);g.bezierCurveTo(l*.7,l*.3,l*.25,l*.34,0,0);
+        g.fillStyle=lg(c0,c1,0,0,l,0);g.fill();g.stroke();
+        g.beginPath();g.moveTo(l*.1,0);g.lineTo(l*.82,0);g.strokeStyle='rgba(255,255,255,.4)';g.stroke();
+        g.restore();
+      }
+    });
+    g.beginPath();g.arc(0,0,R*.1,0,6.2832);g.fillStyle='#14502F';g.fill();
+  }else if(s===1){ // 하트 모양 잎 3장 클로버
+    for(let i=0;i<3;i++){
+      g.save();g.rotate(i*2.0944);
+      g.beginPath();g.moveTo(0,0);
+      g.bezierCurveTo(-R*.62,-R*.18,-R*.62,-R*.92,-R*.28,-R*.92);g.bezierCurveTo(-R*.1,-R*.92,0,-R*.78,0,-R*.66);
+      g.bezierCurveTo(0,-R*.78,R*.1,-R*.92,R*.28,-R*.92);g.bezierCurveTo(R*.62,-R*.92,R*.62,-R*.18,0,0);
+      g.fillStyle=lg('#C98F12','#F6D46A',0,0,0,-R);g.fill();g.stroke();
+      g.beginPath();g.moveTo(0,-R*.12);g.lineTo(0,-R*.62);g.strokeStyle='rgba(255,255,255,.45)';g.stroke();
+      g.restore();
+    }
+    g.beginPath();g.arc(0,0,R*.09,0,6.2832);g.fillStyle='#7A5408';g.fill();
+  }else{ // 꽃잎 5장 꽃
+    for(let i=0;i<5;i++){
+      g.save();g.rotate(i*1.2566-1.5708);
+      g.beginPath();g.moveTo(0,0);g.bezierCurveTo(R*.3,-R*.5,R*.95,-R*.42,R,0);g.bezierCurveTo(R*.95,R*.42,R*.3,R*.5,0,0);
+      g.fillStyle=lg('#6E3FA8','#D2A8F5',0,0,R,0);g.fill();g.stroke();
+      g.restore();
+    }
+    g.beginPath();g.arc(0,0,R*.22,0,6.2832);g.fillStyle=lg('#FFE68A','#E8A817',-R*.2,-R*.2,R*.2,R*.2);g.fill();g.stroke();
+  }
+  g.restore();
+}
+// 그림에서만 개체가 겹치지 않도록 서로 밀어내 자리를 옮긴다. 너무 빽빽하면 잎을 조금씩 줄인다(ks). 개체수·피도 값은 그대로다.
+function layout(q){
+  const it=[];
+  q.h.forEach((h,s)=>{const R=Math.sqrt(AREA[s]/Math.PI);for(let i=0;i<h.length;i+=2)it.push({s,x:h[i],y:h[i+1],R})});
+  for(let ks=1;ks>=.4;ks-=.05){
+    for(let n=0;n<150;n++){
+      let ok=true;
+      it.forEach(a=>{const m=a.R*ks+.015;a.x=Math.min(1-m,Math.max(m,a.x));a.y=Math.min(1-m,Math.max(m,a.y))});
+      for(let i=0;i<it.length;i++)for(let j=i+1;j<it.length;j++){
+        const a=it[i],b=it[j],need=(a.R+b.R)*ks;let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
+        if(d>=need-1e-4)continue;
+        ok=false;if(d<1e-6){dx=Math.cos(i);dy=Math.sin(i);d=1}
+        const p=(need-d)/2+1e-4;dx/=d;dy/=d;a.x-=dx*p;a.y-=dy*p;b.x+=dx*p;b.y+=dy*p;
+      }
+      if(ok)return{it,ks};
+    }
+  }
+  return{it,ks:.4};
+}
+function drawQuad(q){
+  const cv=$('cv'),g=cv.getContext('2d');
+  const gr=g.createRadialGradient(S/2,S/2,60,S/2,S/2,S*.72);gr.addColorStop(0,'#6B5341');gr.addColorStop(1,'#46352A');
+  g.fillStyle=gr;g.fillRect(0,0,S,S);
+  for(let i=0;i<260;i++){g.fillStyle=i%2?'rgba(0,0,0,.14)':'rgba(255,235,210,.08)';g.fillRect(Math.random()*S,Math.random()*S,2+Math.random()*3,2+Math.random()*3)}
+  if(q){const L=layout(q);[0,2,1].forEach(s=>L.it.filter(a=>a.s===s).forEach(a=>plant(g,s,a.x*S,a.y*S,a.R*L.ks*S)))}
+  g.strokeStyle='#E4572E';g.lineWidth=14;g.strokeRect(7,7,S-14,S-14);
+  g.fillStyle='#F3EFE6';g.strokeStyle='rgba(0,0,0,.5)';g.lineWidth=3;
+  [[0,0],[1,0],[0,1],[1,1]].forEach(c=>{const x=c[0]?S-36:2,y=c[1]?S-36:2;g.fillRect(x,y,34,34);g.strokeRect(x,y,34,34)});
+  cv.setAttribute('aria-label',q?'방형구 안 모습. '+NM.map((n,s)=>'종 '+n+' '+q.n[s]+'개체').join(', '):'아직 던지지 않은 방형구');
+}
+function revealed(){return rec.length>=MAX||!$('teacher').hidden}
+function drawMap(){
+  const g=$('map').getContext('2d'),M=600,k=M/W;
+  g.imageSmoothingEnabled=true;g.drawImage(ground,0,0,M,M);
+  g.strokeStyle='rgba(255,255,255,.1)';g.lineWidth=1;g.beginPath();
+  for(let i=1;i<10;i++){g.moveTo(i*60,0);g.lineTo(i*60,M);g.moveTo(0,i*60);g.lineTo(M,i*60)}
+  g.stroke();
+  if(revealed()){
+    g.globalAlpha=.8;
+    P.forEach((p,s)=>{
+      g.fillStyle=COL[s];g.beginPath();
+      for(let i=0;i<p.length;i+=2){
+        const x=p[i]*k,y=p[i+1]*k;
+        if(s===0){g.moveTo(x+1.9,y);g.arc(x,y,1.9,0,6.2832)}
+        else if(s===1){g.moveTo(x,y-2);g.lineTo(x+1.8,y+1.4);g.lineTo(x-1.8,y+1.4);g.closePath()}
+        else{g.moveTo(x,y-3.4);g.lineTo(x+2.8,y);g.lineTo(x,y+3.4);g.lineTo(x-2.8,y);g.closePath()}
+      }
+      g.fill();
+    });
+    g.globalAlpha=1;
+  }
+  contours(g,k); // 개체 점 위에 그려서 항상 보이게 한다
+  const px=peak[0]*k,py=peak[1]*k,pl=px>M-130;
+  g.fillStyle='#fff';g.strokeStyle='rgba(0,0,0,.7)';g.lineWidth=3;g.beginPath();g.moveTo(px,py-11);g.lineTo(px+10,py+7);g.lineTo(px-10,py+7);g.closePath();g.stroke();g.fill();
+  g.font='600 20px sans-serif';g.textAlign=pl?'right':'left';g.textBaseline='middle';
+  const lab='정상 '+Math.round(100+40*peak[2])+' m';g.strokeText(lab,pl?px-16:px+16,py);g.fillText(lab,pl?px-16:px+16,py);
+  [['북',M/2,22],['남',M/2,M-22],['서',22,M/2],['동',M-22,M/2]].forEach((c,i)=>{ // 위쪽이 북쪽
+    g.beginPath();g.arc(c[1],c[2],17,0,6.2832);g.fillStyle=i?'rgba(10,20,14,.78)':'#E4572E';g.fill();
+    g.fillStyle='#fff';g.font='700 19px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(c[0],c[1],c[2]+1);
+  });
+  rec.slice(0,-1).forEach(q=>{const x=(q.x+.5)*k,y=(q.y+.5)*k;g.fillStyle='#F3EFE6';g.strokeStyle='rgba(0,0,0,.65)';g.lineWidth=2;g.fillRect(x-6,y-6,12,12);g.strokeRect(x-6,y-6,12,12)});
+  const q=rec[rec.length-1];
+  if(q){
+    const x=(q.x+.5)*k,y=(q.y+.5)*k,left=x>M-80;
+    g.strokeStyle='#FF7B54';g.lineWidth=5;g.beginPath();g.arc(x,y,20,0,6.2832);g.stroke();
+    g.font='700 30px sans-serif';g.textBaseline='middle';g.textAlign=left?'right':'left';
+    const tx=left?x-30:x+30;
+    g.lineWidth=5;g.strokeStyle='rgba(0,0,0,.75)';g.strokeText(rec.length,tx,y);g.fillStyle='#fff';g.fillText(rec.length,tx,y);
+  }
+  $('mapnote').textContent=revealed()
+    ?'점은 실제 개체의 위치예요(초록 원 a, 노랑 삼각형 b, 보라 마름모 c). 지형과 비교하며 종마다 어디에 많은지 살펴보세요. 위쪽이 북쪽이고, 등고선 간격은 4 m, 굵은 선은 120 m예요.'
+    :'위쪽이 북쪽이에요. 가는 선은 등고선이고 간격은 4 m, 굵은 선은 120 m예요. 격자 한 칸은 10 m × 10 m예요. 10번을 다 던지면 실제 개체 분포가 나타나요.';
+}
+function renderTable(){
+  $('tb').innerHTML=rec.length
+    ?rec.map((q,i)=>'<tr><td>'+(i+1)+'</td>'+[0,1,2].map(s=>'<td>'+q.n[s]+'</td><td>'+q.c[s].toFixed(2)+'</td>').join('')+'</tr>').join('')
+    :'<tr><td class="none" colspan="7">아직 기록이 없어요. 방형구를 던져 보세요.</td></tr>';
+}
+function show(anim){
+  const q=rec[rec.length-1],done=rec.length>=MAX;
+  $('count').textContent=rec.length+' / '+MAX+'회';
+  $('throw').disabled=done;$('throw').textContent=done?'10회 조사 완료':'방형구 던지기';
+  $('empty').hidden=!!q;$('send').hidden=!done;if(done)setSend();
+  [0,1,2].forEach(s=>{$('n'+s).textContent=q?q.n[s]:'–';$('p'+s).textContent=q?q.c[s].toFixed(2):'–'});
+  drawQuad(q);drawMap();renderTable();
+  if(anim&&!matchMedia('(prefers-reduced-motion: reduce)').matches){const e=$('quad');e.classList.remove('drop');void e.offsetWidth;e.classList.add('drop')}
+}
+function showTeacher(){
+  $('teacher').hidden=false;
+  const T=truthOf(P),f=(v,d)=>v.toFixed(d);
+  $('tt').innerHTML=T.map((t,s)=>'<tr><td>종 '+NM[s]+'</td><td>'+AREA[s]+'</td><td>'+t.N+'</td><td>'+f(t.d,2)+'</td><td>'+f(t.f,1)+'</td><td>'+f(t.c,3)+'</td><td>'+f(t.rd,1)+'</td><td>'+f(t.rf,1)+'</td><td>'+f(t.rc,1)+'</td><td><b>'+f(t.iv,1)+'</b></td></tr>').join('');
+  const top=k=>T.reduce((m,t,s)=>t[k]>T[m][k]?s:m,0);
+  $('tnote').textContent='상대밀도 1위: 종 '+NM[top('rd')]+' · 중요치 1위(우점종): 종 '+NM[top('iv')]+' · 분포: a 임의, b 집중(양지바른 남사면), c 집중(그늘진 북사면·골짜기)';
+  drawMap();
+}
+
+$('throw').addEventListener('click',()=>{
+  if(rec.length>=MAX)return;
+  rec.push(measure(Math.round(Math.random()*99e3)/1e3,Math.round(Math.random()*99e3)/1e3));save();show(true);
+});
+$('clear').addEventListener('click',function(){
+  if(!armed){armed=true;this.textContent='한 번 더 누르면 지워요';setTimeout(()=>{armed=false;this.textContent='기록 지우기'},3000);return}
+  armed=false;this.textContent='기록 지우기';rec=[];save();show();
+});
+$('apply').addEventListener('click',()=>{
+  const v=parseInt($('seed').value,10);if(!(v>=1&&v<=999999))return;
+  world(v);rec=[];save();show();if(!$('teacher').hidden)showTeacher();
+});
+$('open').addEventListener('click',()=>{
+  if($('code').value.trim()===CODE){$('codemsg').textContent='';showTeacher()}else $('codemsg').textContent='코드가 맞지 않아요.';
+});
+// ---- 학생: 구글 폼으로 결과 보내기 (교사가 FORM을 채운다) ----
+const data=()=>[seed].concat(...rec.flatMap(q=>[0,1,2].flatMap(s=>[q.n[s],q.c[s].toFixed(2)]))).join(',');
+function setSend(){
+  const a=$('send-go'),ok=FORM.url&&FORM.entry;
+  $('rep').value=data();
+  if(ok){a.href=FORM.url+'?usp=pp_url&entry.'+FORM.entry+'='+encodeURIComponent(data());a.removeAttribute('aria-disabled')}
+  else{a.removeAttribute('href');a.setAttribute('aria-disabled','true')}
+  $('sendmsg').textContent=ok?'':'아직 구글 폼 주소가 연결되지 않았어요. 선생님께 알려 주세요.';
+}
+$('copy').addEventListener('click',()=>{
+  const t=$('rep'),sel=()=>{t.focus();t.select();$('copymsg').textContent='글이 선택됐어요. 길게 눌러 복사해 주세요.'};
+  navigator.clipboard?.writeText(t.value).then(()=>{$('copymsg').textContent='복사했어요.'},sel)||sel();
+});
+
+
+document.querySelectorAll('canvas.ico').forEach((c,s)=>plant(c.getContext('2d'),s,44,44,36));
+$('seed').value=seed;
+if(location.hash==='#teacher')showTeacher();
+show();
+</script>
+</body></html>
